@@ -95,3 +95,30 @@ h2 { font-size: clamp(2rem, 6vw, 3.6rem); margin-bottom: .75rem; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
 }
+
+/* Solar conditions */
+.solar-heading-row { display: flex; flex-direction: column; gap: 1rem; align-items: flex-start; }
+.solar-summary-grid, .solar-dashboard, .scale-grid { display: grid; gap: 1rem; }
+.solar-summary { min-height: 145px; }
+.page-hero { padding: clamp(3rem, 8vw, 6rem) 0 2rem; }
+.page-hero h1 { max-width: none; }
+.data-note { color: var(--muted); }
+.solar-dashboard { padding-bottom: clamp(3rem, 7vw, 5rem); }
+.solar-card, .scale-card { border: 1px solid var(--line); border-radius: var(--radius); background: linear-gradient(145deg, rgba(10, 29, 43, .95), rgba(5, 15, 23, .95)); padding: 1.35rem; }
+.solar-card.featured { border-color: rgba(103, 245, 160, .55); }
+.solar-card strong { display: block; margin: .25rem 0; color: var(--green); font-size: clamp(2rem, 10vw, 4rem); line-height: 1; overflow-wrap: anywhere; }
+.solar-card p { margin: .65rem 0 0; color: var(--muted); }
+.scale-card { min-height: 150px; display: flex; flex-direction: column; justify-content: center; text-align: center; }
+.scale-card span, .scale-card small { color: var(--muted); }
+.scale-card span { font-size: .72rem; letter-spacing: .12em; }
+.scale-card strong { color: var(--green); font-size: 2.4rem; }
+.source-links { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.5rem; }
+.site-nav a[aria-current="page"] { color: var(--green); background: var(--panel-2); }
+@media (min-width: 720px) {
+  .solar-heading-row { flex-direction: row; justify-content: space-between; align-items: end; }
+  .solar-summary-grid, .scale-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .solar-dashboard { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1000px) {
+  .solar-dashboard { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
