@@ -1,0 +1,9 @@
+{
+  "name": "KC8GW Operations Center",
+  "short_name": "KC8GW",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#03080d",
+  "theme_color": "#06131d",
+  "icons": [{"src":"assets/images/favicon.svg","sizes":"any","type":"image/svg+xml"}]
+}

@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#06131d">
+  <meta name="description" content="KC8GW amateur radio, ADS-B, aviation, SDR, Raspberry Pi and 3D printing projects.">
+  <title>KC8GW | Amateur Radio & Aviation</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="brand-wrap">
+      <a class="brand" href="#home" aria-label="KC8GW home">
+        <span class="brand-mark">KC8GW</span>
+        <span class="brand-sub">Amateur Extra · WSGZ373</span>
+      </a>
+      <button class="menu-toggle" aria-expanded="false" aria-controls="site-nav">Menu</button>
+    </div>
+    <nav id="site-nav" class="site-nav" aria-label="Primary navigation">
+      <a href="#home">Home</a>
+      <a href="#radio">Radio</a>
+      <a href="#adsb">ADS-B</a>
+      <a href="#aviation">Aviation</a>
+      <a href="#projects">Projects</a>
+      <a href="#links">Links</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section id="home" class="hero section-shell">
+      <div class="hero-copy">
+        <p class="eyebrow">ON THE AIR · IN THE SKY · ON THE BENCH</p>
+        <h1>KC8GW Operations Center</h1>
+        <p class="lead">Amateur radio, ADS-B aircraft tracking, SDR, flight simulation, Raspberry Pi systems and 3D-printing projects.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="#radio">Explore the station</a>
+          <a class="button secondary" href="#links">Open live links</a>
+        </div>
+      </div>
+      <div class="instrument-panel" aria-label="Station status panel">
+        <article class="instrument">
+          <span class="instrument-label">LOCAL</span>
+          <strong id="local-time">--:--:--</strong>
+          <small id="local-date">Loading</small>
+        </article>
+        <article class="instrument">
+          <span class="instrument-label">UTC</span>
+          <strong id="utc-time">--:--:--</strong>
+          <small id="utc-date">Loading</small>
+        </article>
+        <article class="instrument">
+          <span class="instrument-label">LICENSE</span>
+          <strong>EXTRA</strong>
+          <small>Amateur Radio</small>
+        </article>
+        <article class="instrument">
+          <span class="instrument-label">GMRS</span>
+          <strong>WSGZ373</strong>
+          <small>Parma 575</small>
+        </article>
+      </div>
+    </section>
+
+    <section class="status-strip" aria-label="Quick station information">
+      <div><span>CALLSIGN</span><strong>KC8GW</strong></div>
+      <div><span>HOME REGION</span><strong>Northeast Ohio</strong></div>
+      <div><span>PRIMARY INTERESTS</span><strong>HF · VHF/UHF · SDR · ADS-B</strong></div>
+    </section>
+
+    <section id="radio" class="section-shell content-section">
+      <div class="section-heading">
+        <p class="eyebrow">AMATEUR RADIO</p>
+        <h2>Station and operating interests</h2>
+      </div>
+      <div class="card-grid">
+        <article class="card">
+          <h3>HF & DX</h3>
+          <p>Operating across the amateur bands with an interest in propagation, digital modes, DX contacts and station experimentation.</p>
+        </article>
+        <article class="card">
+          <h3>VHF / UHF</h3>
+          <p>Local repeater, simplex and public-service monitoring across Northeast Ohio.</p>
+        </article>
+        <article class="card">
+          <h3>SDR Lab</h3>
+          <p>Raspberry Pi and desktop SDR projects for voice, digital modes, ACARS, weather and spectrum monitoring.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="adsb" class="section-shell content-section alt-section">
+      <div class="section-heading">
+        <p class="eyebrow">AIRCRAFT TRACKING</p>
+        <h2>ADS-B and aviation data</h2>
+      </div>
+      <div class="feature-layout">
+        <div>
+          <p class="large-copy">Local 1090 MHz and 978 MHz aircraft reception projects, feeder monitoring and private sharing tools built around Raspberry Pi systems.</p>
+          <div class="compact-links">
+            <a href="https://globe.adsbexchange.com/" target="_blank" rel="noopener">Open ADS-B Exchange</a>
+            <a href="https://www.flightaware.com/" target="_blank" rel="noopener">Open FlightAware</a>
+          </div>
+        </div>
+        <div class="data-panel">
+          <div><span>1090 MHz</span><strong>Mode S / ADS-B</strong></div>
+          <div><span>978 MHz</span><strong>UAT</strong></div>
+          <div><span>PLATFORM</span><strong>Raspberry Pi</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="aviation" class="section-shell content-section">
+      <div class="section-heading">
+        <p class="eyebrow">AVIATION</p>
+        <h2>Flight simulation and avionics</h2>
+      </div>
+      <div class="card-grid">
+        <article class="card"><h3>MSFS 2024</h3><p>General aviation flying, G1000 avionics, procedures and home-cockpit control projects.</p></article>
+        <article class="card"><h3>Hardware</h3><p>Honeycomb Alpha and Bravo, Stream Deck, rudder pedals, TrackIR and custom mounts.</p></article>
+        <article class="card"><h3>ForeFlight & EFB</h3><p>Experimenting with portable traffic displays and home-network aircraft data.</p></article>
+      </div>
+    </section>
+
+    <section id="projects" class="section-shell content-section alt-section">
+      <div class="section-heading">
+        <p class="eyebrow">WORKBENCH</p>
+        <h2>Current project areas</h2>
+      </div>
+      <div class="project-list">
+        <article><span>01</span><div><h3>Raspberry Pi systems</h3><p>Portable radio, ADS-B, dashboards, web servers and home automation experiments.</p></div></article>
+        <article><span>02</span><div><h3>3D printing</h3><p>Functional mounts, radio accessories, headset plug covers and editable Fusion 360 parts.</p></div></article>
+        <article><span>03</span><div><h3>Web projects</h3><p>GitHub Pages sites for KC8GW, Parma 575 and The Blowtorch of Parma.</p></div></article>
+      </div>
+    </section>
+
+    <section id="links" class="section-shell content-section">
+      <div class="section-heading">
+        <p class="eyebrow">QUICK LINKS</p>
+        <h2>Connected projects</h2>
+      </div>
+      <div class="link-grid">
+        <a class="link-card" href="https://www.parma575.com" target="_blank" rel="noopener"><strong>Parma 575</strong><span>GMRS community site</span></a>
+        <a class="link-card" href="https://www.theblowtorchofparma.com" target="_blank" rel="noopener"><strong>The Blowtorch of Parma</strong><span>Radio club resources</span></a>
+        <a class="link-card" href="https://www.qrz.com/db/KC8GW" target="_blank" rel="noopener"><strong>QRZ</strong><span>KC8GW callsign page</span></a>
+        <a class="link-card" href="https://github.com/GDub2152" target="_blank" rel="noopener"><strong>GitHub</strong><span>GDub2152 repositories</span></a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>KC8GW · Amateur Extra · WSGZ373</p>
+    <p>Built for GitHub Pages and mobile devices.</p>
+  </footer>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
