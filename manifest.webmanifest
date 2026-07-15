@@ -1,0 +1,15 @@
+{
+  "name": "KC8GW Operations Center",
+  "short_name": "KC8GW",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#02070d",
+  "theme_color": "#02070d",
+  "icons": [
+    {
+      "src": "assets/images/kc8gw-patch.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
