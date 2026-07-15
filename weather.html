@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#03080f">
+  <meta name="description" content="Live outdoor conditions from the KC8GW Ambient Weather station and a Parma, Ohio forecast.">
+  <title>KC8GW | Personal Weather Station</title>
+  <link rel="icon" href="assets/images/kc8gw-patch.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="topbar">
+  <a class="logo-wrap" href="index.html" aria-label="KC8GW home"><img class="logo" src="assets/images/kc8gw-patch.png" alt="KC8GW patch"></a>
+  <div class="brand"><h1>KC8GW</h1><p>AMATEUR EXTRA · GMRS WSGZ373</p><p><b>COMMUNICATE</b> · <span class="blue-text">FLY</span> · <span class="red-text">EXPLORE</span></p></div>
+  <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">MENU</button>
+  <nav id="site-nav" aria-label="Main navigation">
+    <a href="index.html">HOME</a><a href="qrz.html">QRZ</a><a href="weather.html" class="active">WEATHER</a><a href="propagation.html">SOLAR</a><a href="adsb.html">ADS-B</a><a href="media.html">MEDIA</a><a href="projects.html">PROJECTS</a><a href="shack.html">SHACK</a><a href="contact.html">CONTACT</a>
+  </nav>
+</header>
+<div class="ticker"><span><i class="status-dot"></i> KC8GW WEATHER</span><span>STATION <b id="stationHealth">CONNECTING</b></span><span>UPDATED <b id="weatherAge">—</b></span><span>UTC <b data-utc-clock>--:--:--</b></span></div>
+<main id="main-content">
+  <section class="page-title"><p class="eyebrow">PERSONAL WEATHER STATION</p><h2>KC8GW Weather</h2><p class="page-intro">Live outdoor observations from the KC8GW Ambient Weather station. Forecast information is supplied separately by Open-Meteo.</p></section>
+
+  <section class="weather-hero instrument">
+    <header><div><span class="panel-kicker">CURRENT OUTDOOR CONDITIONS</span><h3 id="stationName">KC8GW Ambient Station</h3></div><span id="weatherCondition">CONNECTING</span></header>
+    <div class="body weather-hero-grid">
+      <div class="weather-big-temp"><b id="weatherTemp">—°</b><span>Outdoor temperature</span><small>Feels like <strong id="weatherFeels">—°</strong></small></div>
+      <div class="weather-compass" aria-label="Wind direction"><div class="compass-ring"><span>N</span><span>E</span><span>S</span><span>W</span><i id="windNeedle"></i></div><b id="weatherWindDir">—</b><small>Wind direction</small></div>
+      <div class="weather-health"><span class="live-badge"><i></i> LIVE STATION</span><p id="weatherStatus">Connecting securely to the station…</p><a class="btn" href="https://ambientweather.net/dashboard/62eb2323cc4b4b0432955de02bf33565" target="_blank" rel="noopener">Open Ambient Dashboard</a></div>
+    </div>
+  </section>
+
+  <section class="weather-metrics">
+    <article class="weather-metric"><span>Humidity</span><b id="weatherHumidity">—%</b><small>Outdoor relative humidity</small></article>
+    <article class="weather-metric"><span>Dew Point</span><b id="weatherDewPoint">—°</b><small>Outdoor dew point</small></article>
+    <article class="weather-metric"><span>Wind</span><b id="weatherWindSpeed">— mph</b><small>Current sustained wind</small></article>
+    <article class="weather-metric"><span>Wind Gust</span><b id="weatherGust">— mph</b><small>Latest reported gust</small></article>
+    <article class="weather-metric"><span>Barometer</span><b id="weatherPressure">— inHg</b><small id="pressureTrend">Relative pressure</small></article>
+    <article class="weather-metric"><span>Rain Today</span><b id="weatherRain">— in</b><small>Daily rainfall total</small></article>
+    <article class="weather-metric"><span>Rain Rate</span><b id="weatherRainRate">— in/hr</b><small>Current rainfall intensity</small></article>
+    <article class="weather-metric"><span>UV Index</span><b id="weatherUv">—</b><small id="uvLabel">Ultraviolet exposure</small></article>
+    <article class="weather-metric"><span>Solar Radiation</span><b id="weatherSolar">— W/m²</b><small>Measured sunlight</small></article>
+  </section>
+
+  <section class="dashboard-grid weather-lower">
+    <article class="instrument span8">
+      <header><div><span class="panel-kicker">PARMA AREA</span><h3>7-Day Forecast</h3></div><span>OPEN-METEO</span></header>
+      <div class="body"><div id="forecastGrid" class="forecast-grid"><p>Loading forecast…</p></div><p class="disclaimer">Forecast values are not measured by the personal station. They come from a numerical weather forecast service.</p></div>
+    </article>
+    <article class="instrument span4">
+      <header><div><span class="panel-kicker">PRIVACY</span><h3>Published Sensors</h3></div></header>
+      <div class="body"><div class="data-row"><span>Outdoor sensors</span><b class="ok">Displayed</b></div><div class="data-row"><span>Indoor temperature</span><b>Not published</b></div><div class="data-row"><span>Indoor humidity</span><b>Not published</b></div><div class="data-row"><span>API credentials</span><b>Protected</b></div></div>
+    </article>
+  </section>
+</main>
+<footer class="footer"><div><img src="assets/images/kc8gw-patch.png" alt=""><span><b>KC8GW</b><br>Amateur Extra · WSGZ373</span></div><p>Northeast Ohio · Personal Weather Station</p><p>© <span id="copyrightYear"></span> KC8GW · <b>73!</b></p></footer>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/weather.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
