@@ -1,0 +1,6 @@
+name = "kc8gw-weather"
+main = "worker.js"
+compatibility_date = "2026-07-15"
+
+# Add the API key securely with:
+# npx wrangler secret put WU_API_KEY

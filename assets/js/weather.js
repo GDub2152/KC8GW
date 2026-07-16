@@ -7,33 +7,57 @@
   const dirs=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
   const windDir = deg => Number.isFinite(Number(deg)) ? dirs[Math.round(Number(deg)/22.5)%16] : '—';
   const setNeedle = deg => { const n=$('windNeedle'); if(n && Number.isFinite(Number(deg))) n.style.transform=`translate(-50%,-90%) rotate(${Number(deg)}deg)`; };
+  const heatOrChill = o => {
+    const temp=Number(o.temp), heat=Number(o.heatIndex), chill=Number(o.windChill);
+    if(Number.isFinite(heat) && Number.isFinite(temp) && heat > temp + 1) return heat;
+    if(Number.isFinite(chill) && Number.isFinite(temp) && chill < temp - 1) return chill;
+    return temp;
+  };
+  const ageText = iso => {
+    const t=new Date(iso).getTime();
+    if(!Number.isFinite(t)) return '—';
+    const mins=Math.max(0,Math.round((Date.now()-t)/60000));
+    return mins < 1 ? 'NOW' : `${mins} MIN`;
+  };
+  const uvText = uv => {
+    const n=Number(uv); if(!Number.isFinite(n)) return 'UV index';
+    if(n<3) return 'Low'; if(n<6) return 'Moderate'; if(n<8) return 'High'; if(n<11) return 'Very high'; return 'Extreme';
+  };
 
   async function loadCurrent(){
+    const endpoint=window.KC8GW_CONFIG?.weatherApiUrl;
     try{
-      const url='https://api.open-meteo.com/v1/forecast?latitude=41.4048&longitude=-81.7229&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&daily=sunrise,sunset,uv_index_max,precipitation_sum&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=America%2FNew_York&forecast_days=1';
-      const r=await fetch(url,{cache:'no-store'}); if(!r.ok) throw new Error(`Weather ${r.status}`); const d=await r.json();
-      const c=d.current || {}; const daily=d.daily || {};
-      const pressureInHg=Number(c.surface_pressure)*0.0295299830714;
-      put('stationName','Parma Area Weather');
-      put('weatherTemp',`${num(c.temperature_2m)}°`); put('weatherFeels',`${num(c.apparent_temperature)}°`);
-      put('weatherHumidity',`${num(c.relative_humidity_2m)}%`);
-      const dew = Number(c.temperature_2m) - ((100-Number(c.relative_humidity_2m))/5);
-      put('weatherDewPoint',`${num(dew)}°`);
-      put('weatherWind',`${num(c.wind_speed_10m)} / ${num(c.wind_gusts_10m)} mph`);
-      put('weatherWindSpeed',`${num(c.wind_speed_10m)} mph`); put('weatherGust',`${num(c.wind_gusts_10m)} mph`);
-      put('weatherWindDir',windDir(c.wind_direction_10m)); setNeedle(c.wind_direction_10m);
-      put('weatherPressure',`${num(pressureInHg,2)} inHg`);
-      put('pressureTrend','Surface pressure');
-      put('weatherRain',`${num(daily.precipitation_sum?.[0] ?? c.precipitation,2)} in`);
-      put('weatherRainRate',`${num(c.rain,2)} in/hr`);
-      put('weatherUv',num(daily.uv_index_max?.[0],1)); put('uvLabel','Daily maximum UV');
-      put('weatherSolar','Forecast');
-      put('weatherAge','NOW'); put('stationHealth','ONLINE');
-      put('weatherCondition',codes[c.weather_code]||'Current');
-      put('weatherStatus',`Updated ${new Date(c.time).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})} · Personal station KOHWADSW119 available on Weather Underground.`);
+      if(!endpoint) throw new Error('Weather API endpoint is not configured');
+      const r=await fetch(`${endpoint}${endpoint.includes('?')?'&':'?'}_=${Date.now()}`,{cache:'no-store'});
+      const d=await r.json().catch(()=>({}));
+      if(!r.ok) throw new Error(d.error || `Weather ${r.status}`);
+      const o=d.observation || d;
+      if(!o || !Number.isFinite(Number(o.temp))) throw new Error('No current station observation returned');
+
+      put('stationName',o.neighborhood || 'KC8GW Personal Weather Station');
+      put('weatherTemp',`${num(o.temp,1)}°`);
+      put('weatherFeels',`${num(heatOrChill(o),1)}°`);
+      put('weatherHumidity',`${num(o.humidity)}%`);
+      put('weatherDewPoint',`${num(o.dewpt,1)}°`);
+      put('weatherWind',`${num(o.windSpeed,1)} / ${num(o.windGust,1)} mph`);
+      put('weatherWindSpeed',`${num(o.windSpeed,1)} mph`);
+      put('weatherGust',`${num(o.windGust,1)} mph`);
+      put('weatherWindDir',windDir(o.winddir)); setNeedle(o.winddir);
+      put('weatherPressure',`${num(o.pressure,2)} inHg`);
+      put('pressureTrend','Station barometric pressure');
+      put('weatherRain',`${num(o.precipTotal,2)} in`);
+      put('weatherRainRate',`${num(o.precipRate,2)} in/hr`);
+      put('weatherUv',num(o.uv,1)); put('uvLabel',uvText(o.uv));
+      put('weatherSolar',Number.isFinite(Number(o.solarRadiation)) ? `${num(o.solarRadiation)} W/m²` : '— W/m²');
+      put('weatherAge',ageText(o.obsTimeUtc || o.obsTimeLocal));
+      put('stationHealth','ONLINE');
+      put('weatherCondition',Number(o.precipRate)>0 ? 'RAIN DETECTED' : 'LIVE PWS');
+      const observed=new Date(o.obsTimeUtc || o.obsTimeLocal);
+      const when=Number.isFinite(observed.getTime()) ? observed.toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : 'recently';
+      put('weatherStatus',`Observed by KOHWADSW119 · Updated ${when}`);
     }catch(e){
-      put('weatherCondition','UNAVAILABLE'); put('stationHealth','OFFLINE');
-      put('weatherStatus','Current weather is temporarily unavailable. Use the Weather Underground station link for live personal-station readings.');
+      put('weatherCondition','PWS OFFLINE'); put('stationHealth','OFFLINE'); put('weatherAge','—');
+      put('weatherStatus','Personal-station data is unavailable. Confirm the Worker URL and WU_API_KEY secret.');
       console.error(e);
     }
   }
@@ -47,5 +71,5 @@
     }catch(e){grid.innerHTML='<p>Forecast is temporarily unavailable.</p>'; console.error(e);}
   }
   loadCurrent(); loadForecast();
-  setInterval(loadCurrent,300000); setInterval(loadForecast,600000);
+  setInterval(loadCurrent,120000); setInterval(loadForecast,600000);
 })();

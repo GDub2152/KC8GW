@@ -22,14 +22,14 @@
 </header>
 <div class="ticker"><span><i class="status-dot"></i> KC8GW WEATHER</span><span>WEATHER <b id="stationHealth">CONNECTING</b></span><span>UPDATED <b id="weatherAge">—</b></span><span>UTC <b data-utc-clock>--:--:--</b></span></div>
 <main id="main-content">
-  <section class="page-title"><p class="eyebrow">WEATHER CENTER</p><h2>KC8GW Weather</h2><p class="page-intro">Current Parma-area conditions and forecast from Open-Meteo, plus direct access to the KC8GW personal weather station on Weather Underground.</p></section>
+  <section class="page-title"><p class="eyebrow">WEATHER CENTER</p><h2>KC8GW Weather</h2><p class="page-intro">Live current conditions measured by Weather Underground station KOHWADSW119, with a separate seven-day Parma-area forecast from Open-Meteo.</p></section>
 
   <section class="weather-hero instrument">
     <header><div><span class="panel-kicker">CURRENT CONDITIONS</span><h3 id="stationName">Parma Area Weather</h3></div><span id="weatherCondition">CONNECTING</span></header>
     <div class="body weather-hero-grid">
       <div class="weather-big-temp"><b id="weatherTemp">—°</b><span>Current temperature</span><small>Feels like <strong id="weatherFeels">—°</strong></small></div>
       <div class="weather-compass" aria-label="Wind direction"><div class="compass-ring"><span>N</span><span>E</span><span>S</span><span>W</span><i id="windNeedle"></i></div><b id="weatherWindDir">—</b><small>Wind direction</small></div>
-      <div class="weather-health"><span class="live-badge"><i></i> LIVE WEATHER</span><p id="weatherStatus">Loading current weather…</p><a class="btn" href="https://www.wunderground.com/dashboard/pws/KOHWADSW119" target="_blank" rel="noopener">Open KC8GW Weather Station</a></div>
+      <div class="weather-health"><span class="live-badge"><i></i> LIVE PWS DATA</span><p id="weatherStatus">Loading current weather…</p><a class="btn" href="https://www.wunderground.com/dashboard/pws/KOHWADSW119" target="_blank" rel="noopener">Open KC8GW Weather Station</a></div>
     </div>
   </section>
 
@@ -42,7 +42,7 @@
     <article class="weather-metric"><span>Rain Today</span><b id="weatherRain">— in</b><small>Daily rainfall total</small></article>
     <article class="weather-metric"><span>Rain Rate</span><b id="weatherRainRate">— in/hr</b><small>Current rainfall intensity</small></article>
     <article class="weather-metric"><span>UV Index</span><b id="weatherUv">—</b><small id="uvLabel">Ultraviolet exposure</small></article>
-    <article class="weather-metric"><span>Solar Radiation</span><b id="weatherSolar">— W/m²</b><small>Forecast solar radiation</small></article>
+    <article class="weather-metric"><span>Solar Radiation</span><b id="weatherSolar">— W/m²</b><small>Measured by the personal station</small></article>
   </section>
 
   <section class="dashboard-grid weather-lower">
@@ -52,7 +52,7 @@
     </article>
     <article class="instrument span4">
       <header><div><span class="panel-kicker">PERSONAL STATION</span><h3>Weather Underground</h3></div></header>
-      <div class="body"><div class="data-row"><span>Station ID</span><b>KOHWADSW119</b></div><div class="data-row"><span>Live dashboard</span><b class="ok">Available</b></div><div class="data-row"><span>Indoor readings</span><b>Not displayed</b></div><p class="disclaimer">Open the station dashboard for live readings reported directly by the KC8GW personal weather station.</p><a class="btn primary" href="https://www.wunderground.com/dashboard/pws/KOHWADSW119" target="_blank" rel="noopener">View Live Station</a></div>
+      <div class="body"><div class="data-row"><span>Station ID</span><b>KOHWADSW119</b></div><div class="data-row"><span>Current readings</span><b class="ok">Official PWS API</b></div><div class="data-row"><span>Indoor readings</span><b>Not displayed</b></div><p class="disclaimer">Temperature, humidity, wind, pressure, rainfall, UV and solar readings above come directly from the KOHWADSW119 API feed.</p><a class="btn primary" href="https://www.wunderground.com/dashboard/pws/KOHWADSW119" target="_blank" rel="noopener">View Live Station</a></div>
     </article>
   </section>
 </main>

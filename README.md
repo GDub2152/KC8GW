@@ -18,4 +18,11 @@ Edit `assets/js/config.js` to change the local feeder dashboard address. Live st
 
 ## Weather setup
 
-Current conditions and forecast use Open-Meteo. The KC8GW personal weather station is linked through Weather Underground station `KOHWADSW119`. No Cloudflare Worker or API keys are required.
+Current conditions now come from Weather Underground PWS `KOHWADSW119` through the secure Cloudflare Worker in `cloudflare-worker/`. The seven-day forecast remains Open-Meteo and is clearly labeled as forecast data.
+
+1. Deploy `cloudflare-worker/worker.js` to the existing `kc8gw-weather` Worker.
+2. Add a secret named `WU_API_KEY` in Cloudflare.
+3. Keep the key out of all GitHub files.
+4. Confirm `assets/js/config.js` contains the correct Worker URL.
+
+See `cloudflare-worker/README.md` for exact instructions.
