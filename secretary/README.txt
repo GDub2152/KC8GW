@@ -49,3 +49,6 @@ V1.2 UPDATE
 - Board selection can fill saved callsign and role.
 - Individual saved names can still be deleted.
 - Restore Current Officer Group button puts the seven current officers back if needed.
+
+
+Version 1.5: Officers Attending name fields are true dropdown menus sourced from Saved People. Selecting a name automatically fills that person's callsign and saved officer role.

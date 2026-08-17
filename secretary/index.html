@@ -65,7 +65,7 @@
 
       <details open>
         <summary>Board / Officers In Attendance</summary>
-        <p class="hint">Add one line for each officer or director who is present.</p>
+        <p class="hint">Each Name box is a dropdown of your saved people. Select a name and the callsign and office/role will fill automatically. You can still edit the callsign or role if needed.</p>
         <div id="boardRows" class="repeat-list"></div>
         <button id="addBoardBtn" class="btn small secondary" type="button">+ Add Person</button>
       </details>
@@ -178,7 +178,7 @@
 
   <template id="boardRowTemplate">
     <div class="repeat-row board-row">
-      <input class="board-name" placeholder="Name" list="peopleNameList">
+      <select class="board-name" aria-label="Officer name"><option value="">Select saved name…</option></select>
       <input class="board-call" placeholder="Callsign">
       <input class="board-role" placeholder="Office / role">
       <button class="icon-btn remove-row" type="button" title="Remove">×</button>

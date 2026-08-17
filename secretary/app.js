@@ -1,6 +1,6 @@
 const STORAGE_KEY='kc8gw_tboparc_minutes_draft_v1';
 const PEOPLE_KEY='kc8gw_tboparc_people_directory_v1';
-const OFFICER_SEED_KEY='kc8gw_tboparc_officer_group_seed_v14';
+const OFFICER_SEED_KEY='kc8gw_tboparc_officer_group_seed_v15';
 const CURRENT_OFFICERS=[
   {role:'President',name:'Leone Sirna',call:'KB8VBR'},
   {role:'Vice President',name:'Bill Beckman',call:'N8LXY'},
@@ -23,7 +23,7 @@ function voteText(y,n,a){const yy=y||'0', nn=n||'0', aa=a||'0'; return aa && Num
 function person(name,call){return [name,call].filter(Boolean).join(' ')}
 function normalizeCall(call=''){return String(call).trim().toUpperCase()}
 function getPeople(){try{return JSON.parse(localStorage.getItem(PEOPLE_KEY)||'[]')}catch{return []}}
-function setPeople(list){localStorage.setItem(PEOPLE_KEY,JSON.stringify(list));renderPeople()}
+function setPeople(list){localStorage.setItem(PEOPLE_KEY,JSON.stringify(list));renderPeople();refreshBoardNameDropdowns()}
 function combinedPerson(p){return [p.name,p.call].filter(Boolean).join(' ')}
 function seedCurrentOfficers(){
   if(localStorage.getItem(OFFICER_SEED_KEY))return;
@@ -71,9 +71,33 @@ function learnPeopleFromForm(){
   const sn=$('submittedName').value, sc=$('submittedCall').value;if(sn.trim())saveDirectoryPerson(sn,sc,{quiet:true});
 }
 
-function addBoardRow(data={}){const node=$('boardRowTemplate').content.firstElementChild.cloneNode(true);const nameEl=node.querySelector('.board-name'),callEl=node.querySelector('.board-call');nameEl.value=data.name||'';callEl.value=data.call||'';node.querySelector('.board-role').value=data.role||'';nameEl.addEventListener('change',()=>{const p=lookupPersonByName(nameEl.value);if(p){nameEl.value=p.name;if(!callEl.value.trim())callEl.value=p.call||'';const roleEl=node.querySelector('.board-role');if(!roleEl.value.trim())roleEl.value=p.role||'';}updatePreview()});wireRow(node);$('boardRows').appendChild(node)}
+function populateBoardNameSelect(selectEl,selectedName=''){
+  const list=getPeople();
+  selectEl.innerHTML='<option value="">Select saved name…</option>'+list.map(p=>`<option value="${esc(p.name)}">${esc(p.name)}${p.call?' — '+esc(p.call):''}</option>`).join('');
+  if(selectedName){
+    const exists=list.some(p=>p.name===selectedName);
+    if(!exists){
+      const opt=document.createElement('option');opt.value=selectedName;opt.textContent=selectedName;selectEl.appendChild(opt);
+    }
+    selectEl.value=selectedName;
+  }
+}
+function refreshBoardNameDropdowns(){rows('boardRows','.board-row').forEach(r=>{const sel=r.querySelector('.board-name');const current=sel.value;populateBoardNameSelect(sel,current)})}
+function addBoardRow(data={}){
+  const node=$('boardRowTemplate').content.firstElementChild.cloneNode(true);
+  const nameEl=node.querySelector('.board-name'),callEl=node.querySelector('.board-call'),roleEl=node.querySelector('.board-role');
+  populateBoardNameSelect(nameEl,data.name||'');
+  callEl.value=data.call||'';roleEl.value=data.role||'';
+  nameEl.addEventListener('change',()=>{
+    const p=lookupPersonByName(nameEl.value);
+    if(p){callEl.value=p.call||'';roleEl.value=p.role||'';}
+    else if(!nameEl.value){callEl.value='';roleEl.value='';}
+    updatePreview();
+  });
+  wireRow(node);$('boardRows').appendChild(node)
+}
 function addItemRow(containerId,text=''){const node=$('itemRowTemplate').content.firstElementChild.cloneNode(true);node.querySelector('.item-text').value=text;wireRow(node);$(containerId).appendChild(node)}
-function wireRow(node){node.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',updatePreview));node.querySelector('.remove-row').addEventListener('click',()=>{node.remove();updatePreview()})}
+function wireRow(node){node.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',updatePreview));node.querySelectorAll('select').forEach(el=>el.addEventListener('change',updatePreview));node.querySelector('.remove-row').addEventListener('click',()=>{node.remove();updatePreview()})}
 function rows(containerId,selector){return [...$(containerId).querySelectorAll(selector)]}
 function collect(){const data={};fieldIds.forEach(id=>data[id]=$(id).value);data.board=rows('boardRows','.board-row').map(r=>({name:r.querySelector('.board-name').value,call:r.querySelector('.board-call').value,role:r.querySelector('.board-role').value}));['oldBusinessRows','newBusinessRows','announcementRows'].forEach(id=>data[id]=rows(id,'.item-text').map(x=>x.value).filter(x=>x.trim()));return data}
 function load(data){fieldIds.forEach(id=>{if(data[id]!==undefined)$(id).value=data[id]});$('boardRows').innerHTML='';(data.board||[]).forEach(addBoardRow);['oldBusinessRows','newBusinessRows','announcementRows'].forEach(id=>{$(id).innerHTML='';(data[id]||[]).forEach(v=>addItemRow(id,v))});ensureStarterRows();updatePreview()}
