@@ -1,4 +1,5 @@
 const STORAGE_KEY='kc8gw_tboparc_minutes_draft_v1';
+const PEOPLE_KEY='kc8gw_tboparc_people_directory_v1';
 const $=id=>document.getElementById(id);
 const fieldIds=['clubName','clubAbbr','meetingType','meetingDate','meetingTime','meetingLocation','callTime','presidingOfficer','quorum','attendanceCount','callNotes','previousMeetingDate','minutesMover','minutesSeconder','minutesYes','minutesNo','minutesAbstain','minutesNotes','treasurerName','treasuryBalance','treasurerReport','secretaryName','memberCount','secretaryReport','reportsMover','reportsSeconder','reportsYes','reportsNo','reportsAbstain','presentation','adjournTime','adjournMover','adjournSeconder','adjournYes','adjournNo','adjournAbstain','submittedName','submittedCall','submittedTitle','submittedClub'];
 
@@ -9,8 +10,36 @@ function fmtLongDate(v){if(!v)return ''; const d=new Date(v+'T12:00:00'); return
 function fmtTime(v){if(!v)return ''; const [h,m]=v.split(':').map(Number); return new Intl.DateTimeFormat('en-US',{hour:'numeric',minute:'2-digit'}).format(new Date(2000,0,1,h,m)).toLowerCase()}
 function voteText(y,n,a){const yy=y||'0', nn=n||'0', aa=a||'0'; return aa && Number(aa)>0 ? `${yy}Y to ${nn}N with ${aa} abstention${Number(aa)===1?'':'s'}`:`${yy}Y to ${nn}N`}
 function person(name,call){return [name,call].filter(Boolean).join(' ')}
+function normalizeCall(call=''){return String(call).trim().toUpperCase()}
+function getPeople(){try{return JSON.parse(localStorage.getItem(PEOPLE_KEY)||'[]')}catch{return []}}
+function setPeople(list){localStorage.setItem(PEOPLE_KEY,JSON.stringify(list));renderPeople()}
+function combinedPerson(p){return [p.name,p.call].filter(Boolean).join(' ')}
+function saveDirectoryPerson(name,call,{quiet=false}={}){
+  name=String(name||'').trim(); call=normalizeCall(call);
+  if(!name){if(!quiet)$('peopleStatus').textContent='Enter a name first.';return false}
+  let list=getPeople();
+  const idx=list.findIndex(p=>(call&&normalizeCall(p.call)===call)||p.name.toLowerCase()===name.toLowerCase());
+  const entry={name,call};
+  if(idx>=0)list[idx]=entry;else list.push(entry);
+  list.sort((a,b)=>a.name.localeCompare(b.name)); setPeople(list);
+  if(!quiet)$('peopleStatus').textContent=`Saved ${combinedPerson(entry)}.`;
+  return true
+}
+function deleteDirectoryPerson(index){const list=getPeople();const p=list[index];if(!p)return;if(!confirm(`Delete ${combinedPerson(p)} from the saved names list?`))return;list.splice(index,1);setPeople(list);$('peopleStatus').textContent='Name deleted.'}
+function renderPeople(){
+  const list=getPeople();
+  $('peopleCombinedList').innerHTML=list.map(p=>`<option value="${esc(combinedPerson(p))}"></option>`).join('');
+  $('peopleNameList').innerHTML=list.map(p=>`<option value="${esc(p.name)}">${esc(p.call||'')}</option>`).join('');
+  $('peopleList').innerHTML=list.length?list.map((p,i)=>`<div class="person-entry"><div><strong>${esc(p.name)}</strong><small>${esc(p.call||'No callsign')}</small></div><button type="button" class="person-delete" data-person-index="${i}">Delete</button></div>`).join(''):'<div class="people-empty">No saved names yet. Add a person above or enter officers in the meeting form and save the draft.</div>';
+  $('peopleList').querySelectorAll('.person-delete').forEach(b=>b.addEventListener('click',()=>deleteDirectoryPerson(Number(b.dataset.personIndex))));
+}
+function lookupPersonByName(name){const n=String(name||'').trim().toLowerCase();return getPeople().find(p=>p.name.toLowerCase()===n)}
+function learnPeopleFromForm(){
+  rows('boardRows','.board-row').forEach(r=>{const name=r.querySelector('.board-name').value;const call=r.querySelector('.board-call').value;if(name.trim())saveDirectoryPerson(name,call,{quiet:true})});
+  const sn=$('submittedName').value, sc=$('submittedCall').value;if(sn.trim())saveDirectoryPerson(sn,sc,{quiet:true});
+}
 
-function addBoardRow(data={}){const node=$('boardRowTemplate').content.firstElementChild.cloneNode(true);node.querySelector('.board-name').value=data.name||'';node.querySelector('.board-call').value=data.call||'';node.querySelector('.board-role').value=data.role||'';wireRow(node);$('boardRows').appendChild(node)}
+function addBoardRow(data={}){const node=$('boardRowTemplate').content.firstElementChild.cloneNode(true);const nameEl=node.querySelector('.board-name'),callEl=node.querySelector('.board-call');nameEl.value=data.name||'';callEl.value=data.call||'';node.querySelector('.board-role').value=data.role||'';nameEl.addEventListener('change',()=>{const p=lookupPersonByName(nameEl.value);if(p&&!callEl.value.trim())callEl.value=p.call||'';updatePreview()});wireRow(node);$('boardRows').appendChild(node)}
 function addItemRow(containerId,text=''){const node=$('itemRowTemplate').content.firstElementChild.cloneNode(true);node.querySelector('.item-text').value=text;wireRow(node);$(containerId).appendChild(node)}
 function wireRow(node){node.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',updatePreview));node.querySelector('.remove-row').addEventListener('click',()=>{node.remove();updatePreview()})}
 function rows(containerId,selector){return [...$(containerId).querySelectorAll(selector)]}
@@ -46,12 +75,14 @@ ${section('Presentation',`<p>${d.presentation?nl2br(d.presentation):'None.'}</p>
 ${section('Motion to Adjourn',`<p>${adjourn||'<span class="empty-note">Not entered.</span>'}</p>`)}
 ${section('Submitted by',`<p class="submitted-lines">${submitted}</p>`)}
 `}
-function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(collect()));$('saveStatus').textContent='Saved on this device at '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}
+function save(){learnPeopleFromForm();localStorage.setItem(STORAGE_KEY,JSON.stringify(collect()));$('saveStatus').textContent='Saved on this device at '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}
 function newMeeting(){if(!confirm('Start a new meeting? Your current on-screen entries will be cleared. Save or export first if you need them.'))return;localStorage.removeItem(STORAGE_KEY);location.reload()}
 function exportData(){const blob=new Blob([JSON.stringify(collect(),null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`TBOPARC-Minutes-${$('meetingDate').value||'draft'}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function importData(file){const r=new FileReader();r.onload=()=>{try{load(JSON.parse(r.result));save()}catch(e){alert('That backup file could not be read.')}};r.readAsText(file)}
 
 $('addBoardBtn').addEventListener('click',()=>{addBoardRow();updatePreview()});document.querySelectorAll('.add-item').forEach(b=>b.addEventListener('click',()=>{addItemRow(b.dataset.add,'');updatePreview()}));fieldIds.forEach(id=>$(id).addEventListener('input',updatePreview));$('saveBtn').addEventListener('click',save);$('printBtn').addEventListener('click',()=>window.print());$('newMeetingBtn').addEventListener('click',newMeeting);$('exportBtn').addEventListener('click',exportData);$('importInput').addEventListener('change',e=>{if(e.target.files[0])importData(e.target.files[0]);e.target.value=''});
+
+$('savePersonBtn').addEventListener('click',()=>{if(saveDirectoryPerson($('personName').value,$('personCall').value)){$('personName').value='';$('personCall').value=''}});$('personCall').addEventListener('keydown',e=>{if(e.key==='Enter')$('savePersonBtn').click()});renderPeople();
 
 const saved=localStorage.getItem(STORAGE_KEY);if(saved){try{load(JSON.parse(saved));$('saveStatus').textContent='Loaded saved draft from this device'}catch{ensureStarterRows();updatePreview()}}else{ensureStarterRows();const today=new Date();$('meetingDate').value=today.toISOString().slice(0,10);updatePreview()}
 let autosaveTimer;document.addEventListener('input',()=>{clearTimeout(autosaveTimer);autosaveTimer=setTimeout(save,1200)});

@@ -35,3 +35,10 @@ A future version can add cloud synchronization/login if desired.
 PRINTING / PDF
 Use the "Print / Save PDF" button. On Windows, choose "Save as PDF" or your printer.
 On iPad, use the standard iOS print/share workflow to create or save a PDF.
+
+v1.1 Saved People Directory
+- Save names/callsigns once and reuse them from dropdown suggestions.
+- Board name selection can auto-fill a saved callsign.
+- Saving a meeting draft remembers board attendees and the submitting secretary.
+- Saved people can be updated or deleted from the Saved People Directory section.
+- Saved people are stored in the browser on that device, like meeting drafts.
