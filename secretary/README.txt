@@ -42,3 +42,10 @@ v1.1 Saved People Directory
 - Saving a meeting draft remembers board attendees and the submitting secretary.
 - Saved people can be updated or deleted from the Saved People Directory section.
 - Saved people are stored in the browser on that device, like meeting drafts.
+
+V1.2 UPDATE
+- Preloaded TBOPARC current officer saved-name group.
+- Names/callsigns appear as dropdown suggestions in person fields.
+- Board selection can fill saved callsign and role.
+- Individual saved names can still be deleted.
+- Restore Current Officer Group button puts the seven current officers back if needed.

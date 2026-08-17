@@ -48,13 +48,14 @@
 
       <details open>
         <summary>Saved People Directory</summary>
-        <p class="hint">Save names and callsigns once, then pick them from dropdown suggestions anywhere a person is requested. Delete old names here at any time.</p>
+        <p class="hint">Your current TBOPARC officers are preloaded as a saved group. Click/tap a name from the dropdown suggestions anywhere a person is requested. You can add people or delete names you no longer use.</p>
         <div class="field-grid people-add-grid">
           <label>Name<input id="personName" placeholder="Greg Williams"></label>
           <label>Callsign<input id="personCall" placeholder="KC8GW" autocapitalize="characters"></label>
         </div>
         <div class="people-actions">
           <button id="savePersonBtn" class="btn small secondary" type="button">+ Save / Update Person</button>
+          <button id="restoreOfficersBtn" class="btn small secondary" type="button">Restore Current Officer Group</button>
           <span id="peopleStatus" class="hint"></span>
         </div>
         <div id="peopleList" class="people-list" aria-live="polite"></div>
@@ -106,7 +107,7 @@
         <div class="report-block">
           <h3>Secretary</h3>
           <div class="field-grid">
-            <label>Secretary name/call<input id="secretaryName" list="peopleCombinedList" value="Greg KC8GW"></label>
+            <label>Secretary name/call<input id="secretaryName" list="peopleCombinedList" value="Greg Williams KC8GW"></label>
             <label>Current active members<input id="memberCount" type="number" min="0"></label>
           </div>
           <label>Secretary report<textarea id="secretaryReport" rows="3" placeholder="No outstanding paperwork."></textarea></label>

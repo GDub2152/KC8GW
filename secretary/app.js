@@ -1,5 +1,16 @@
 const STORAGE_KEY='kc8gw_tboparc_minutes_draft_v1';
 const PEOPLE_KEY='kc8gw_tboparc_people_directory_v1';
+const OFFICER_SEED_KEY='kc8gw_tboparc_officer_group_seed_v14';
+const CURRENT_OFFICERS=[
+  {role:'President',name:'Leone Sirna',call:'KB8VBR'},
+  {role:'Vice President',name:'Bill Beckman',call:'N8LXY'},
+  {role:'Secretary',name:'Greg Williams',call:'KC8GW'},
+  {role:'Treasurer',name:'Dale Martin',call:'KJ8DM'},
+  {role:'Sargent at Arms',name:'Rick Rawlinson',call:'N8PPS'},
+  {role:'Trustee #1',name:'Scott Foschke',call:'N8OND'},
+  {role:'Trustee #2',name:'Mike Doerner',call:'W8NIN'},
+  {role:'License Trustee',name:'Edward Rivers II',call:'W8IE'}
+];
 const $=id=>document.getElementById(id);
 const fieldIds=['clubName','clubAbbr','meetingType','meetingDate','meetingTime','meetingLocation','callTime','presidingOfficer','quorum','attendanceCount','callNotes','previousMeetingDate','minutesMover','minutesSeconder','minutesYes','minutesNo','minutesAbstain','minutesNotes','treasurerName','treasuryBalance','treasurerReport','secretaryName','memberCount','secretaryReport','reportsMover','reportsSeconder','reportsYes','reportsNo','reportsAbstain','presentation','adjournTime','adjournMover','adjournSeconder','adjournYes','adjournNo','adjournAbstain','submittedName','submittedCall','submittedTitle','submittedClub'];
 
@@ -14,12 +25,33 @@ function normalizeCall(call=''){return String(call).trim().toUpperCase()}
 function getPeople(){try{return JSON.parse(localStorage.getItem(PEOPLE_KEY)||'[]')}catch{return []}}
 function setPeople(list){localStorage.setItem(PEOPLE_KEY,JSON.stringify(list));renderPeople()}
 function combinedPerson(p){return [p.name,p.call].filter(Boolean).join(' ')}
+function seedCurrentOfficers(){
+  if(localStorage.getItem(OFFICER_SEED_KEY))return;
+  let list=getPeople();
+  CURRENT_OFFICERS.forEach(officer=>{
+    const idx=list.findIndex(p=>normalizeCall(p.call)===officer.call || String(p.name||'').toLowerCase()===officer.name.toLowerCase());
+    if(idx>=0) list[idx]={...list[idx],...officer}; else list.push({...officer});
+  });
+  list.sort((a,b)=>a.name.localeCompare(b.name));
+  localStorage.setItem(PEOPLE_KEY,JSON.stringify(list));
+  localStorage.setItem(OFFICER_SEED_KEY,'1');
+}
+function restoreCurrentOfficers(){
+  let list=getPeople();
+  CURRENT_OFFICERS.forEach(officer=>{
+    const idx=list.findIndex(p=>normalizeCall(p.call)===officer.call || String(p.name||'').toLowerCase()===officer.name.toLowerCase());
+    if(idx>=0) list[idx]={...list[idx],...officer}; else list.push({...officer});
+  });
+  list.sort((a,b)=>a.name.localeCompare(b.name)); setPeople(list);
+  $('peopleStatus').textContent='Current officer group restored.';
+}
 function saveDirectoryPerson(name,call,{quiet=false}={}){
   name=String(name||'').trim(); call=normalizeCall(call);
   if(!name){if(!quiet)$('peopleStatus').textContent='Enter a name first.';return false}
   let list=getPeople();
   const idx=list.findIndex(p=>(call&&normalizeCall(p.call)===call)||p.name.toLowerCase()===name.toLowerCase());
-  const entry={name,call};
+  const existing=idx>=0?list[idx]:{};
+  const entry={...existing,name,call};
   if(idx>=0)list[idx]=entry;else list.push(entry);
   list.sort((a,b)=>a.name.localeCompare(b.name)); setPeople(list);
   if(!quiet)$('peopleStatus').textContent=`Saved ${combinedPerson(entry)}.`;
@@ -30,27 +62,22 @@ function renderPeople(){
   const list=getPeople();
   $('peopleCombinedList').innerHTML=list.map(p=>`<option value="${esc(combinedPerson(p))}"></option>`).join('');
   $('peopleNameList').innerHTML=list.map(p=>`<option value="${esc(p.name)}">${esc(p.call||'')}</option>`).join('');
-  $('peopleList').innerHTML=list.length?list.map((p,i)=>`<div class="person-entry"><div><strong>${esc(p.name)}</strong><small>${esc(p.call||'No callsign')}</small></div><button type="button" class="person-delete" data-person-index="${i}">Delete</button></div>`).join(''):'<div class="people-empty">No saved names yet. Add a person above or enter officers in the meeting form and save the draft.</div>';
+  $('peopleList').innerHTML=list.length?list.map((p,i)=>`<div class="person-entry"><div><strong>${esc(p.name)}</strong><small>${esc([p.call,p.role].filter(Boolean).join(' • ')||'No callsign')}</small></div><button type="button" class="person-delete" data-person-index="${i}">Delete</button></div>`).join(''):'<div class="people-empty">No saved names yet. Add a person above or restore the current officer group.</div>';
   $('peopleList').querySelectorAll('.person-delete').forEach(b=>b.addEventListener('click',()=>deleteDirectoryPerson(Number(b.dataset.personIndex))));
 }
-function lookupPersonByName(name){const n=String(name||'').trim().toLowerCase();return getPeople().find(p=>p.name.toLowerCase()===n)}
+function lookupPersonByName(name){const n=String(name||'').trim().toLowerCase();return getPeople().find(p=>p.name.toLowerCase()===n || combinedPerson(p).toLowerCase()===n)}
 function learnPeopleFromForm(){
   rows('boardRows','.board-row').forEach(r=>{const name=r.querySelector('.board-name').value;const call=r.querySelector('.board-call').value;if(name.trim())saveDirectoryPerson(name,call,{quiet:true})});
   const sn=$('submittedName').value, sc=$('submittedCall').value;if(sn.trim())saveDirectoryPerson(sn,sc,{quiet:true});
 }
 
-function addBoardRow(data={}){const node=$('boardRowTemplate').content.firstElementChild.cloneNode(true);const nameEl=node.querySelector('.board-name'),callEl=node.querySelector('.board-call');nameEl.value=data.name||'';callEl.value=data.call||'';node.querySelector('.board-role').value=data.role||'';nameEl.addEventListener('change',()=>{const p=lookupPersonByName(nameEl.value);if(p&&!callEl.value.trim())callEl.value=p.call||'';updatePreview()});wireRow(node);$('boardRows').appendChild(node)}
+function addBoardRow(data={}){const node=$('boardRowTemplate').content.firstElementChild.cloneNode(true);const nameEl=node.querySelector('.board-name'),callEl=node.querySelector('.board-call');nameEl.value=data.name||'';callEl.value=data.call||'';node.querySelector('.board-role').value=data.role||'';nameEl.addEventListener('change',()=>{const p=lookupPersonByName(nameEl.value);if(p){nameEl.value=p.name;if(!callEl.value.trim())callEl.value=p.call||'';const roleEl=node.querySelector('.board-role');if(!roleEl.value.trim())roleEl.value=p.role||'';}updatePreview()});wireRow(node);$('boardRows').appendChild(node)}
 function addItemRow(containerId,text=''){const node=$('itemRowTemplate').content.firstElementChild.cloneNode(true);node.querySelector('.item-text').value=text;wireRow(node);$(containerId).appendChild(node)}
 function wireRow(node){node.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',updatePreview));node.querySelector('.remove-row').addEventListener('click',()=>{node.remove();updatePreview()})}
 function rows(containerId,selector){return [...$(containerId).querySelectorAll(selector)]}
 function collect(){const data={};fieldIds.forEach(id=>data[id]=$(id).value);data.board=rows('boardRows','.board-row').map(r=>({name:r.querySelector('.board-name').value,call:r.querySelector('.board-call').value,role:r.querySelector('.board-role').value}));['oldBusinessRows','newBusinessRows','announcementRows'].forEach(id=>data[id]=rows(id,'.item-text').map(x=>x.value).filter(x=>x.trim()));return data}
 function load(data){fieldIds.forEach(id=>{if(data[id]!==undefined)$(id).value=data[id]});$('boardRows').innerHTML='';(data.board||[]).forEach(addBoardRow);['oldBusinessRows','newBusinessRows','announcementRows'].forEach(id=>{$(id).innerHTML='';(data[id]||[]).forEach(v=>addItemRow(id,v))});ensureStarterRows();updatePreview()}
-function ensureStarterRows(){if(!$('boardRows').children.length)[
-{name:'Jerry Baron',call:'KE8SVK',role:'President'},
-{name:'Leone Sirna',call:'KB8VBR',role:'Vice President'},
-{name:'',call:'',role:'Secretary'},
-{name:'',call:'',role:'Treasurer'},
-{name:'',call:'',role:'Repeater/License Trustee'}].forEach(addBoardRow);['oldBusinessRows','newBusinessRows','announcementRows'].forEach(id=>{if(!$(id).children.length)addItemRow(id,'')})}
+function ensureStarterRows(){if(!$('boardRows').children.length)CURRENT_OFFICERS.forEach(addBoardRow);['oldBusinessRows','newBusinessRows','announcementRows'].forEach(id=>{if(!$(id).children.length)addItemRow(id,'')})}
 function section(title,body){return `<section class="minutes-section"><h2>${esc(title)}:</h2>${body}</section>`}
 function updatePreview(){const d=collect();const board=d.board.filter(x=>x.name||x.call||x.role).map(x=>`<li>${esc([x.name,x.call,x.role].filter(Boolean).join(', '))}</li>`).join('')||'<li class="empty-note">None listed.</li>';
 const callText=`The meeting was opened${d.callTime?' at '+esc(fmtTime(d.callTime)):''}${d.presidingOfficer?' by '+esc(d.presidingOfficer):''}. The Secretary took attendance and there is a quorum ${esc(d.quorum||'present')}.${d.callNotes?'<br>'+nl2br(d.callNotes):''}`;
@@ -82,7 +109,8 @@ function importData(file){const r=new FileReader();r.onload=()=>{try{load(JSON.p
 
 $('addBoardBtn').addEventListener('click',()=>{addBoardRow();updatePreview()});document.querySelectorAll('.add-item').forEach(b=>b.addEventListener('click',()=>{addItemRow(b.dataset.add,'');updatePreview()}));fieldIds.forEach(id=>$(id).addEventListener('input',updatePreview));$('saveBtn').addEventListener('click',save);$('printBtn').addEventListener('click',()=>window.print());$('newMeetingBtn').addEventListener('click',newMeeting);$('exportBtn').addEventListener('click',exportData);$('importInput').addEventListener('change',e=>{if(e.target.files[0])importData(e.target.files[0]);e.target.value=''});
 
-$('savePersonBtn').addEventListener('click',()=>{if(saveDirectoryPerson($('personName').value,$('personCall').value)){$('personName').value='';$('personCall').value=''}});$('personCall').addEventListener('keydown',e=>{if(e.key==='Enter')$('savePersonBtn').click()});renderPeople();
+$('restoreOfficersBtn').addEventListener('click',restoreCurrentOfficers);
+$('savePersonBtn').addEventListener('click',()=>{if(saveDirectoryPerson($('personName').value,$('personCall').value)){$('personName').value='';$('personCall').value=''}});$('personCall').addEventListener('keydown',e=>{if(e.key==='Enter')$('savePersonBtn').click()});seedCurrentOfficers();renderPeople();
 
 const saved=localStorage.getItem(STORAGE_KEY);if(saved){try{load(JSON.parse(saved));$('saveStatus').textContent='Loaded saved draft from this device'}catch{ensureStarterRows();updatePreview()}}else{ensureStarterRows();const today=new Date();$('meetingDate').value=today.toISOString().slice(0,10);updatePreview()}
 let autosaveTimer;document.addEventListener('input',()=>{clearTimeout(autosaveTimer);autosaveTimer=setTimeout(save,1200)});
