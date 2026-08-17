@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>KC8GW Secretary Meeting Minutes Assistant</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header no-print">
+    <div>
+      <p class="eyebrow">KC8GW Secretary Tools</p>
+      <h1>Meeting Minutes Assistant</h1>
+      <p class="subhead">Take notes during the meeting, then produce clean TBOPARC-style minutes.</p>
+    </div>
+    <div class="header-actions">
+      <button id="newMeetingBtn" class="btn secondary" type="button">New Meeting</button>
+      <button id="saveBtn" class="btn" type="button">Save Draft</button>
+      <button id="printBtn" class="btn accent" type="button">Print / Save PDF</button>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section class="editor no-print" aria-label="Minutes editor">
+      <div class="toolbar-card">
+        <div>
+          <strong>Draft status:</strong> <span id="saveStatus">Not saved yet</span>
+        </div>
+        <div class="toolbar-actions">
+          <button id="exportBtn" class="btn small secondary" type="button">Export Backup</button>
+          <label class="btn small secondary file-label">Import Backup<input id="importInput" type="file" accept="application/json,.json" hidden></label>
+        </div>
+      </div>
+
+      <details open>
+        <summary>Meeting Information</summary>
+        <div class="field-grid">
+          <label>Club name<input id="clubName" value="The Blowtorch of Parma Amateur Radio Club"></label>
+          <label>Abbreviation<input id="clubAbbr" value="TBOPARC"></label>
+          <label>Meeting type<input id="meetingType" value="General Membership Meeting"></label>
+          <label>Date<input id="meetingDate" type="date"></label>
+          <label>Start time<input id="meetingTime" type="time" value="19:00"></label>
+          <label>Location<input id="meetingLocation" value="Parma-Powers Branch of the Cuyahoga County Public Library"></label>
+        </div>
+      </details>
+
+      <details open>
+        <summary>Board / Officers In Attendance</summary>
+        <p class="hint">Add one line for each officer or director who is present.</p>
+        <div id="boardRows" class="repeat-list"></div>
+        <button id="addBoardBtn" class="btn small secondary" type="button">+ Add Person</button>
+      </details>
+
+      <details open>
+        <summary>Call to Order</summary>
+        <div class="field-grid">
+          <label>Called to order time<input id="callTime" type="time"></label>
+          <label>Presiding officer<input id="presidingOfficer" placeholder="Jerry KE8SVK"></label>
+          <label>Quorum<select id="quorum"><option>present</option><option>not present</option></select></label>
+          <label>Total attendance<input id="attendanceCount" type="number" min="0" placeholder="20"></label>
+        </div>
+        <label>Additional call-to-order notes<textarea id="callNotes" rows="3"></textarea></label>
+      </details>
+
+      <details open>
+        <summary>Approval of Previous Minutes</summary>
+        <div class="field-grid">
+          <label>Previous meeting date<input id="previousMeetingDate" type="date"></label>
+          <label>Motion made by<input id="minutesMover" placeholder="Bill KA8VIT"></label>
+          <label>Seconded by<input id="minutesSeconder" placeholder="Rick N8PPS"></label>
+          <label>Yes votes<input id="minutesYes" type="number" min="0"></label>
+          <label>No votes<input id="minutesNo" type="number" min="0"></label>
+          <label>Abstain<input id="minutesAbstain" type="number" min="0" value="0"></label>
+        </div>
+        <label>Custom wording / notes<textarea id="minutesNotes" rows="3" placeholder="Leave blank to use the standard motion wording."></textarea></label>
+      </details>
+
+      <details open>
+        <summary>Officer Reports</summary>
+        <div class="report-block">
+          <h3>Treasurer</h3>
+          <div class="field-grid">
+            <label>Treasurer name/call<input id="treasurerName" placeholder="Dale KJ8DM"></label>
+            <label>Treasury balance<input id="treasuryBalance" inputmode="decimal" placeholder="2628.93"></label>
+          </div>
+          <label>Treasurer report<textarea id="treasurerReport" rows="3" placeholder="All bills paid and no outstanding bills."></textarea></label>
+        </div>
+        <div class="report-block">
+          <h3>Secretary</h3>
+          <div class="field-grid">
+            <label>Secretary name/call<input id="secretaryName" value="Greg KC8GW"></label>
+            <label>Current active members<input id="memberCount" type="number" min="0"></label>
+          </div>
+          <label>Secretary report<textarea id="secretaryReport" rows="3" placeholder="No outstanding paperwork."></textarea></label>
+        </div>
+        <div class="report-block">
+          <h3>Motion to Accept Reports</h3>
+          <div class="field-grid">
+            <label>Motion made by<input id="reportsMover"></label>
+            <label>Seconded by<input id="reportsSeconder"></label>
+            <label>Yes votes<input id="reportsYes" type="number" min="0"></label>
+            <label>No votes<input id="reportsNo" type="number" min="0"></label>
+            <label>Abstain<input id="reportsAbstain" type="number" min="0" value="0"></label>
+          </div>
+        </div>
+      </details>
+
+      <details open>
+        <summary>Old Business</summary>
+        <div id="oldBusinessRows" class="repeat-list"></div>
+        <button data-add="oldBusinessRows" class="btn small secondary add-item" type="button">+ Add Old Business Item</button>
+      </details>
+
+      <details open>
+        <summary>New Business</summary>
+        <div id="newBusinessRows" class="repeat-list"></div>
+        <button data-add="newBusinessRows" class="btn small secondary add-item" type="button">+ Add New Business Item</button>
+      </details>
+
+      <details open>
+        <summary>Announcements</summary>
+        <div id="announcementRows" class="repeat-list"></div>
+        <button data-add="announcementRows" class="btn small secondary add-item" type="button">+ Add Announcement</button>
+      </details>
+
+      <details open>
+        <summary>Presentation / Program</summary>
+        <label>Presentation notes<textarea id="presentation" rows="4"></textarea></label>
+      </details>
+
+      <details open>
+        <summary>Adjournment</summary>
+        <div class="field-grid">
+          <label>Adjourned at<input id="adjournTime" type="time"></label>
+          <label>Motion made by<input id="adjournMover"></label>
+          <label>Seconded by<input id="adjournSeconder"></label>
+          <label>Yes votes<input id="adjournYes" type="number" min="0"></label>
+          <label>No votes<input id="adjournNo" type="number" min="0"></label>
+          <label>Abstain<input id="adjournAbstain" type="number" min="0" value="0"></label>
+        </div>
+      </details>
+
+      <details open>
+        <summary>Submitted By</summary>
+        <div class="field-grid">
+          <label>Name<input id="submittedName" value="Greg Williams"></label>
+          <label>Callsign<input id="submittedCall" value="KC8GW"></label>
+          <label>Title<input id="submittedTitle" value="Secretary"></label>
+          <label>Club short name<input id="submittedClub" value="The Blowtorch of Parma ARC"></label>
+        </div>
+      </details>
+    </section>
+
+    <aside class="preview-wrap" aria-label="Minutes preview">
+      <div class="preview-toolbar no-print"><strong>Live Minutes Preview</strong><span>Updates as you type</span></div>
+      <article id="minutesPreview" class="paper"></article>
+    </aside>
+  </main>
+
+  <template id="boardRowTemplate">
+    <div class="repeat-row board-row">
+      <input class="board-name" placeholder="Name">
+      <input class="board-call" placeholder="Callsign">
+      <input class="board-role" placeholder="Office / role">
+      <button class="icon-btn remove-row" type="button" title="Remove">×</button>
+    </div>
+  </template>
+
+  <template id="itemRowTemplate">
+    <div class="repeat-row item-row">
+      <textarea class="item-text" rows="2" placeholder="Enter item or notes..."></textarea>
+      <button class="icon-btn remove-row" type="button" title="Remove">×</button>
+    </div>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
