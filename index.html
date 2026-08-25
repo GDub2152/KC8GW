@@ -102,6 +102,23 @@
     <a class="feature-card" href="media.html"><span class="feature-icon">▣</span><div><h3>Media Gallery</h3><p>Station, aircraft, radio and project photos and videos.</p></div><b>OPEN →</b></a>
   </section>
 
+
+  <section class="say-hi-panel" aria-labelledby="say-hi-title">
+    <div class="say-hi-copy">
+      <p class="eyebrow">VISITING KC8GW.COM?</p>
+      <h2 id="say-hi-title">👋 Say Hi to KC8GW</h2>
+      <p>I’d love to know you stopped by. Click below to send me a quick hello. If you’re a ham, you can add your callsign so I know who waved!</p>
+      <p class="say-hi-note">No callsign? No problem — it’s completely optional.</p>
+    </div>
+    <form id="sayHiForm" class="say-hi-form" autocomplete="off">
+      <label for="visitorCallsign">Callsign <span>(optional)</span></label>
+      <input id="visitorCallsign" name="callsign" type="text" maxlength="12" inputmode="text" autocomplete="off" placeholder="e.g. W8ABC" aria-describedby="sayHiStatus">
+      <input class="say-hi-honey" id="sayHiWebsite" name="website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button id="sayHiButton" class="btn primary say-hi-button" type="submit">👋 SEND MY HELLO</button>
+      <p id="sayHiStatus" class="say-hi-status" role="status" aria-live="polite">One click sends KC8GW a friendly visitor greeting.</p>
+    </form>
+  </section>
+
   <section class="links-panel">
     <div><p class="eyebrow">FREQUENTLY USED</p><h2>Quick Links</h2></div>
     <div class="quick-links">
@@ -137,5 +154,6 @@
 <script src="assets/js/config.js"></script>
 <script src="assets/js/weather.js"></script>
 <script src="assets/js/app.js"></script>
+<script src="assets/js/say-hi.js"></script>
 </body>
 </html>
