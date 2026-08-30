@@ -1,140 +1,178 @@
-const STORAGE_KEY='kc8gw_tboparc_minutes_draft_v1';
-const PEOPLE_KEY='kc8gw_tboparc_people_directory_v1';
-const OFFICER_SEED_KEY='kc8gw_tboparc_officer_group_seed_v15';
-const CURRENT_OFFICERS=[
-  {role:'President',name:'Leone Sirna',call:'KB8VBR'},
-  {role:'Vice President',name:'Bill Beckman',call:'N8LXY'},
-  {role:'Secretary',name:'Greg Williams',call:'KC8GW'},
-  {role:'Treasurer',name:'Dale Martin',call:'KJ8DM'},
-  {role:'Sargent at Arms',name:'Rick Rawlinson',call:'N8PPS'},
-  {role:'Trustee #1',name:'Scott Foschke',call:'N8OND'},
-  {role:'Trustee #2',name:'Mike Doerner',call:'W8NIN'},
-  {role:'License Trustee',name:'Edward Rivers II',call:'W8IE'}
-];
+const STORAGE_KEY="tboparcSecretaryHelperV1";
 const $=id=>document.getElementById(id);
-const fieldIds=['clubName','clubAbbr','meetingType','meetingDate','meetingTime','meetingLocation','callTime','presidingOfficer','quorum','attendanceCount','callNotes','previousMeetingDate','minutesMover','minutesSeconder','minutesYes','minutesNo','minutesAbstain','minutesNotes','treasurerName','treasuryBalance','treasurerReport','secretaryName','memberCount','secretaryReport','reportsMover','reportsSeconder','reportsYes','reportsNo','reportsAbstain','presentation','adjournTime','adjournMover','adjournSeconder','adjournYes','adjournNo','adjournAbstain','submittedName','submittedCall','submittedTitle','submittedClub'];
+const scalarIds=["meetingType","meetingDate","scheduledTime","location","callTime","calledBy","quorum","priorMinutesAction","priorMinutesMeeting","priorMotionBy","priorSecondBy","priorYes","priorNo","priorNotes","reportsMotionBy","reportsSecondBy","reportsYes","reportsNo","presentation","adjournTime","adjournMotionBy","adjournSecondBy","adjournYes","adjournNo","secretaryName","secretaryCallsign"];
+let state={attendance:[],reports:[],oldBusiness:[],newBusiness:[],announcements:[]};
+let saveTimer;
 
-function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
-function nl2br(s=''){return esc(s).replace(/\n/g,'<br>')}
-function fmtDate(v){if(!v)return ''; const d=new Date(v+'T12:00:00'); return new Intl.DateTimeFormat('en-US',{weekday:'long',day:'2-digit',month:'short',year:'numeric'}).format(d).replace(/, (\d{4})$/, '-$1').replace(/^([^,]+), /,'$1, ')}
-function fmtLongDate(v){if(!v)return ''; const d=new Date(v+'T12:00:00'); return new Intl.DateTimeFormat('en-US',{month:'long',day:'numeric',year:'numeric'}).format(d)}
-function fmtTime(v){if(!v)return ''; const [h,m]=v.split(':').map(Number); return new Intl.DateTimeFormat('en-US',{hour:'numeric',minute:'2-digit'}).format(new Date(2000,0,1,h,m)).toLowerCase()}
-function voteText(y,n,a){const yy=y||'0', nn=n||'0', aa=a||'0'; return aa && Number(aa)>0 ? `${yy}Y to ${nn}N with ${aa} abstention${Number(aa)===1?'':'s'}`:`${yy}Y to ${nn}N`}
-function person(name,call){return [name,call].filter(Boolean).join(' ')}
-function normalizeCall(call=''){return String(call).trim().toUpperCase()}
-function getPeople(){try{return JSON.parse(localStorage.getItem(PEOPLE_KEY)||'[]')}catch{return []}}
-function setPeople(list){localStorage.setItem(PEOPLE_KEY,JSON.stringify(list));renderPeople();refreshBoardNameDropdowns()}
-function combinedPerson(p){return [p.name,p.call].filter(Boolean).join(' ')}
-function seedCurrentOfficers(){
-  if(localStorage.getItem(OFFICER_SEED_KEY))return;
-  let list=getPeople();
-  CURRENT_OFFICERS.forEach(officer=>{
-    const idx=list.findIndex(p=>normalizeCall(p.call)===officer.call || String(p.name||'').toLowerCase()===officer.name.toLowerCase());
-    if(idx>=0) list[idx]={...list[idx],...officer}; else list.push({...officer});
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function esc(s=""){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function val(id){const el=$(id); return el.type==="checkbox"?el.checked:el.value}
+function setVal(id,v){const el=$(id); if(!el)return; if(el.type==="checkbox")el.checked=!!v; else el.value=v??""}
+function scheduleSave(){ $("saveState").textContent="Saving…"; clearTimeout(saveTimer); saveTimer=setTimeout(save,350)}
+function save(){
+  const scalars={}; scalarIds.forEach(id=>scalars[id]=val(id));
+  localStorage.setItem(STORAGE_KEY,JSON.stringify({...state,scalars}));
+  $("saveState").textContent="Saved";
+}
+function load(){
+  const raw=localStorage.getItem(STORAGE_KEY);
+  if(!raw){seedDate();renderAll();return}
+  try{
+    const data=JSON.parse(raw); state.attendance=data.attendance||[];state.reports=data.reports||[];
+    state.oldBusiness=data.oldBusiness||[];state.newBusiness=data.newBusiness||[];state.announcements=data.announcements||[];
+    Object.entries(data.scalars||{}).forEach(([k,v])=>setVal(k,v));
+  }catch(e){seedDate()}
+  renderAll();
+}
+function seedDate(){ if(!$("meetingDate").value) $("meetingDate").value=new Date().toISOString().slice(0,10) }
+
+function renderAttendance(){
+  const root=$("attendanceList");root.innerHTML="";
+  state.attendance.forEach((p,i)=>{
+    const card=document.createElement("div");card.className="entry-card";
+    card.innerHTML=`<div class="row">
+      <label>Name<input data-att="${p.id}" data-field="name" value="${esc(p.name)}" placeholder="Name"></label>
+      <label>Callsign<input data-att="${p.id}" data-field="callsign" value="${esc(p.callsign)}" placeholder="Optional"></label>
+      <label>Role<select data-att="${p.id}" data-field="role">
+        ${["Member","President","Vice President","Secretary","Treasurer","Repeater/License Trustee","Director-at-Large","Guest","Other"].map(x=>`<option ${p.role===x?"selected":""}>${x}</option>`).join("")}
+      </select></label>
+      <button class="danger small" data-remove-att="${p.id}">Remove</button>
+    </div>`;
+    root.appendChild(card);
   });
-  list.sort((a,b)=>a.name.localeCompare(b.name));
-  localStorage.setItem(PEOPLE_KEY,JSON.stringify(list));
-  localStorage.setItem(OFFICER_SEED_KEY,'1');
+  $("attendanceCount").textContent=state.attendance.length;
 }
-function restoreCurrentOfficers(){
-  let list=getPeople();
-  CURRENT_OFFICERS.forEach(officer=>{
-    const idx=list.findIndex(p=>normalizeCall(p.call)===officer.call || String(p.name||'').toLowerCase()===officer.name.toLowerCase());
-    if(idx>=0) list[idx]={...list[idx],...officer}; else list.push({...officer});
+function renderReports(){
+  const root=$("reportList");root.innerHTML="";
+  state.reports.forEach(r=>{
+    const card=document.createElement("div");card.className="entry-card";
+    card.innerHTML=`<div class="row single">
+      <label>Report heading<input data-report="${r.id}" data-field="title" value="${esc(r.title)}" placeholder="Treasury, Secretary, President, etc."></label>
+      <button class="danger small" data-remove-report="${r.id}">Remove</button>
+    </div>
+    <textarea rows="4" data-report="${r.id}" data-field="text" placeholder="Report details">${esc(r.text)}</textarea>`;
+    root.appendChild(card);
   });
-  list.sort((a,b)=>a.name.localeCompare(b.name)); setPeople(list);
-  $('peopleStatus').textContent='Current officer group restored.';
 }
-function saveDirectoryPerson(name,call,{quiet=false}={}){
-  name=String(name||'').trim(); call=normalizeCall(call);
-  if(!name){if(!quiet)$('peopleStatus').textContent='Enter a name first.';return false}
-  let list=getPeople();
-  const idx=list.findIndex(p=>(call&&normalizeCall(p.call)===call)||p.name.toLowerCase()===name.toLowerCase());
-  const existing=idx>=0?list[idx]:{};
-  const entry={...existing,name,call};
-  if(idx>=0)list[idx]=entry;else list.push(entry);
-  list.sort((a,b)=>a.name.localeCompare(b.name)); setPeople(list);
-  if(!quiet)$('peopleStatus').textContent=`Saved ${combinedPerson(entry)}.`;
-  return true
-}
-function deleteDirectoryPerson(index){const list=getPeople();const p=list[index];if(!p)return;if(!confirm(`Delete ${combinedPerson(p)} from the saved names list?`))return;list.splice(index,1);setPeople(list);$('peopleStatus').textContent='Name deleted.'}
-function renderPeople(){
-  const list=getPeople();
-  $('peopleCombinedList').innerHTML=list.map(p=>`<option value="${esc(combinedPerson(p))}"></option>`).join('');
-  $('peopleNameList').innerHTML=list.map(p=>`<option value="${esc(p.name)}">${esc(p.call||'')}</option>`).join('');
-  $('peopleList').innerHTML=list.length?list.map((p,i)=>`<div class="person-entry"><div><strong>${esc(p.name)}</strong><small>${esc([p.call,p.role].filter(Boolean).join(' • ')||'No callsign')}</small></div><button type="button" class="person-delete" data-person-index="${i}">Delete</button></div>`).join(''):'<div class="people-empty">No saved names yet. Add a person above or restore the current officer group.</div>';
-  $('peopleList').querySelectorAll('.person-delete').forEach(b=>b.addEventListener('click',()=>deleteDirectoryPerson(Number(b.dataset.personIndex))));
-}
-function lookupPersonByName(name){const n=String(name||'').trim().toLowerCase();return getPeople().find(p=>p.name.toLowerCase()===n || combinedPerson(p).toLowerCase()===n)}
-function learnPeopleFromForm(){
-  rows('boardRows','.board-row').forEach(r=>{const name=r.querySelector('.board-name').value;const call=r.querySelector('.board-call').value;if(name.trim())saveDirectoryPerson(name,call,{quiet:true})});
-  const sn=$('submittedName').value, sc=$('submittedCall').value;if(sn.trim())saveDirectoryPerson(sn,sc,{quiet:true});
-}
-
-function populateBoardNameSelect(selectEl,selectedName=''){
-  const list=getPeople();
-  selectEl.innerHTML='<option value="">Select saved name…</option>'+list.map(p=>`<option value="${esc(p.name)}">${esc(p.name)}${p.call?' — '+esc(p.call):''}</option>`).join('');
-  if(selectedName){
-    const exists=list.some(p=>p.name===selectedName);
-    if(!exists){
-      const opt=document.createElement('option');opt.value=selectedName;opt.textContent=selectedName;selectEl.appendChild(opt);
-    }
-    selectEl.value=selectedName;
-  }
-}
-function refreshBoardNameDropdowns(){rows('boardRows','.board-row').forEach(r=>{const sel=r.querySelector('.board-name');const current=sel.value;populateBoardNameSelect(sel,current)})}
-function addBoardRow(data={}){
-  const node=$('boardRowTemplate').content.firstElementChild.cloneNode(true);
-  const nameEl=node.querySelector('.board-name'),callEl=node.querySelector('.board-call'),roleEl=node.querySelector('.board-role');
-  populateBoardNameSelect(nameEl,data.name||'');
-  callEl.value=data.call||'';roleEl.value=data.role||'';
-  nameEl.addEventListener('change',()=>{
-    const p=lookupPersonByName(nameEl.value);
-    if(p){callEl.value=p.call||'';roleEl.value=p.role||'';}
-    else if(!nameEl.value){callEl.value='';roleEl.value='';}
-    updatePreview();
+function renderItems(kind){
+  const root=$(kind+"List");root.innerHTML="";
+  state[kind].forEach((it,idx)=>{
+    const card=document.createElement("div");card.className="entry-card";
+    card.innerHTML=`<div class="row single">
+      <label>Item ${idx+1}<textarea rows="4" data-item-kind="${kind}" data-item-id="${it.id}" placeholder="Enter details">${esc(it.text)}</textarea></label>
+      <button class="danger small" data-remove-kind="${kind}" data-remove-id="${it.id}">Remove</button>
+    </div>`;
+    root.appendChild(card);
   });
-  wireRow(node);$('boardRows').appendChild(node)
 }
-function addItemRow(containerId,text=''){const node=$('itemRowTemplate').content.firstElementChild.cloneNode(true);node.querySelector('.item-text').value=text;wireRow(node);$(containerId).appendChild(node)}
-function wireRow(node){node.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',updatePreview));node.querySelectorAll('select').forEach(el=>el.addEventListener('change',updatePreview));node.querySelector('.remove-row').addEventListener('click',()=>{node.remove();updatePreview()})}
-function rows(containerId,selector){return [...$(containerId).querySelectorAll(selector)]}
-function collect(){const data={};fieldIds.forEach(id=>data[id]=$(id).value);data.board=rows('boardRows','.board-row').map(r=>({name:r.querySelector('.board-name').value,call:r.querySelector('.board-call').value,role:r.querySelector('.board-role').value}));['oldBusinessRows','newBusinessRows','announcementRows'].forEach(id=>data[id]=rows(id,'.item-text').map(x=>x.value).filter(x=>x.trim()));return data}
-function load(data){fieldIds.forEach(id=>{if(data[id]!==undefined)$(id).value=data[id]});$('boardRows').innerHTML='';(data.board||[]).forEach(addBoardRow);['oldBusinessRows','newBusinessRows','announcementRows'].forEach(id=>{$(id).innerHTML='';(data[id]||[]).forEach(v=>addItemRow(id,v))});ensureStarterRows();updatePreview()}
-function ensureStarterRows(){if(!$('boardRows').children.length)CURRENT_OFFICERS.forEach(addBoardRow);['oldBusinessRows','newBusinessRows','announcementRows'].forEach(id=>{if(!$(id).children.length)addItemRow(id,'')})}
-function section(title,body){return `<section class="minutes-section"><h2>${esc(title)}:</h2>${body}</section>`}
-function updatePreview(){const d=collect();const board=d.board.filter(x=>x.name||x.call||x.role).map(x=>`<li>${esc([x.name,x.call,x.role].filter(Boolean).join(', '))}</li>`).join('')||'<li class="empty-note">None listed.</li>';
-const callText=`The meeting was opened${d.callTime?' at '+esc(fmtTime(d.callTime)):''}${d.presidingOfficer?' by '+esc(d.presidingOfficer):''}. The Secretary took attendance and there is a quorum ${esc(d.quorum||'present')}.${d.callNotes?'<br>'+nl2br(d.callNotes):''}`;
-let previous=''; if(d.minutesNotes.trim()) previous=nl2br(d.minutesNotes); else if(d.minutesMover||d.minutesSeconder||d.previousMeetingDate){previous=`A motion to waive reading and accept the minutes of the ${esc(fmtLongDate(d.previousMeetingDate)||'previous')} membership meeting was made${d.minutesMover?' by '+esc(d.minutesMover):''}${d.minutesSeconder?' and seconded by '+esc(d.minutesSeconder):''}. A vote was taken and the motion passed ${esc(voteText(d.minutesYes,d.minutesNo,d.minutesAbstain))}.`}
-const treasuryParts=[];if(d.treasuryBalance)treasuryParts.push(`reports $${Number(String(d.treasuryBalance).replace(/[$,]/g,'' )||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} in the Club treasury`);if(d.treasurerReport)treasuryParts.push(d.treasurerReport.replace(/^./,c=>c.toLowerCase()));const treasury=`<p class="report-heading">Treasury</p><p>The Treasurer${d.treasurerName?' '+esc(d.treasurerName):''} ${treasuryParts.length?esc(treasuryParts.join(' and ')): 'gave the Treasurer\'s report'}.</p>`;
-const secParts=[];if(d.secretaryReport)secParts.push(d.secretaryReport);if(d.memberCount)secParts.push(`${d.memberCount} current and active members`);if(d.attendanceCount)secParts.push(`${d.attendanceCount} people present at the meeting`);const secretary=`<p class="report-heading">Secretary</p><p>The Secretary${d.secretaryName?' '+esc(d.secretaryName):''} reports ${secParts.length?esc(secParts.join('. ')):'no report entered'}.</p>`;
-let reportMotion='';if(d.reportsMover||d.reportsSeconder)reportMotion=`<p>A motion was made to accept the Treasurer’s and Secretary’s reports${d.reportsMover?' by '+esc(d.reportsMover):''}${d.reportsSeconder?' and seconded by '+esc(d.reportsSeconder):''}. A vote was taken and the motion passed ${esc(voteText(d.reportsYes,d.reportsNo,d.reportsAbstain))}.</p>`;
-const items=(arr,numbered=false)=>arr.filter(Boolean).length?arr.filter(Boolean).map((x,i)=>`<p class="business-item">${numbered?'#'+(i+1)+'. ':''}${nl2br(x)}</p>`).join(''):'<p>None.</p>';
-let adjourn='';if(d.adjournTime||d.adjournMover||d.adjournSeconder)adjourn=`A motion to adjourn the meeting${d.adjournTime?' was made at '+esc(fmtTime(d.adjournTime)): ' was made'}${d.adjournMover?' by '+esc(d.adjournMover):''}${d.adjournSeconder?' and seconded by '+esc(d.adjournSeconder):''}. A vote was taken and the motion passed ${esc(voteText(d.adjournYes,d.adjournNo,d.adjournAbstain))}.`;if(d.attendanceCount)adjourn+=`<br><br>There were ${esc(d.attendanceCount)} people present at the meeting${d.attendanceCount?' with the attendance list attached.':''}`;
-const submitted=[person(d.submittedName,d.submittedCall),d.submittedTitle,d.submittedClub].filter(Boolean).map(esc).join('<br>');
-$('minutesPreview').innerHTML=`
-<div class="doc-title">${esc(d.clubName)}</div><div class="doc-abbr">(${esc(d.clubAbbr)})</div><div class="doc-type">${esc(d.meetingType)}</div>
-<div class="doc-meta">${esc(fmtDate(d.meetingDate))}${d.meetingTime?'<br>'+esc(fmtTime(d.meetingTime)):''}${d.meetingLocation?'<br>'+esc(d.meetingLocation):''}</div>
-${section('Board of Directors In Attendance',`<ul class="board-list">${board}</ul>`)}
-${section('Call to Order',`<p>${callText}</p>`)}
-${section('Reading and Approval of Past Meeting Minutes',`<p>${previous||'<span class="empty-note">No motion entered.</span>'}</p>`)}
-${section('Officer Reports',treasury+secretary+reportMotion)}
-${section('Old Business',items(d.oldBusinessRows))}
-${section('New Business',items(d.newBusinessRows,true))}
-${section('Announcements',items(d.announcementRows))}
-${section('Presentation',`<p>${d.presentation?nl2br(d.presentation):'None.'}</p>`)}
-${section('Motion to Adjourn',`<p>${adjourn||'<span class="empty-note">Not entered.</span>'}</p>`)}
-${section('Submitted by',`<p class="submitted-lines">${submitted}</p>`)}
-`}
-function save(){learnPeopleFromForm();localStorage.setItem(STORAGE_KEY,JSON.stringify(collect()));$('saveStatus').textContent='Saved on this device at '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}
-function newMeeting(){if(!confirm('Start a new meeting? Your current on-screen entries will be cleared. Save or export first if you need them.'))return;localStorage.removeItem(STORAGE_KEY);location.reload()}
-function exportData(){const blob=new Blob([JSON.stringify(collect(),null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`TBOPARC-Minutes-${$('meetingDate').value||'draft'}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-function importData(file){const r=new FileReader();r.onload=()=>{try{load(JSON.parse(r.result));save()}catch(e){alert('That backup file could not be read.')}};r.readAsText(file)}
+function renderAll(){renderAttendance();renderReports();["oldBusiness","newBusiness","announcements"].forEach(renderItems);refreshPreview()}
 
-$('addBoardBtn').addEventListener('click',()=>{addBoardRow();updatePreview()});document.querySelectorAll('.add-item').forEach(b=>b.addEventListener('click',()=>{addItemRow(b.dataset.add,'');updatePreview()}));fieldIds.forEach(id=>$(id).addEventListener('input',updatePreview));$('saveBtn').addEventListener('click',save);$('printBtn').addEventListener('click',()=>window.print());$('newMeetingBtn').addEventListener('click',newMeeting);$('exportBtn').addEventListener('click',exportData);$('importInput').addEventListener('change',e=>{if(e.target.files[0])importData(e.target.files[0]);e.target.value=''});
+document.addEventListener("input",e=>{
+  if(scalarIds.includes(e.target.id)) scheduleSave();
+  const att=e.target.dataset.att;if(att){const p=state.attendance.find(x=>x.id===att);if(p){p[e.target.dataset.field]=e.target.value;scheduleSave()}}
+  const rep=e.target.dataset.report;if(rep){const r=state.reports.find(x=>x.id===rep);if(r){r[e.target.dataset.field]=e.target.value;scheduleSave()}}
+  const kind=e.target.dataset.itemKind;if(kind){const it=state[kind].find(x=>x.id===e.target.dataset.itemId);if(it){it.text=e.target.value;scheduleSave()}}
+});
+document.addEventListener("change",e=>{if(scalarIds.includes(e.target.id))scheduleSave()});
 
-$('restoreOfficersBtn').addEventListener('click',restoreCurrentOfficers);
-$('savePersonBtn').addEventListener('click',()=>{if(saveDirectoryPerson($('personName').value,$('personCall').value)){$('personName').value='';$('personCall').value=''}});$('personCall').addEventListener('keydown',e=>{if(e.key==='Enter')$('savePersonBtn').click()});seedCurrentOfficers();renderPeople();
+$("addPersonBtn").onclick=()=>{state.attendance.push({id:uid(),name:"",callsign:"",role:"Member"});renderAttendance();scheduleSave()};
+$("addReportBtn").onclick=()=>{state.reports.push({id:uid(),title:"",text:""});renderReports();scheduleSave()};
+document.querySelectorAll("[data-add-item]").forEach(b=>b.onclick=()=>{const k=b.dataset.addItem;state[k].push({id:uid(),text:""});renderItems(k);scheduleSave()});
+document.addEventListener("click",e=>{
+  if(e.target.dataset.removeAtt){state.attendance=state.attendance.filter(x=>x.id!==e.target.dataset.removeAtt);renderAttendance();scheduleSave()}
+  if(e.target.dataset.removeReport){state.reports=state.reports.filter(x=>x.id!==e.target.dataset.removeReport);renderReports();scheduleSave()}
+  if(e.target.dataset.removeKind){const k=e.target.dataset.removeKind;state[k]=state[k].filter(x=>x.id!==e.target.dataset.removeId);renderItems(k);scheduleSave()}
+});
+document.querySelectorAll(".steps button").forEach(btn=>btn.onclick=()=>{
+  document.querySelectorAll(".steps button").forEach(b=>b.classList.toggle("active",b===btn));
+  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active",p.id===btn.dataset.target));
+  if(btn.dataset.target==="preview") refreshPreview();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
 
-const saved=localStorage.getItem(STORAGE_KEY);if(saved){try{load(JSON.parse(saved));$('saveStatus').textContent='Loaded saved draft from this device'}catch{ensureStarterRows();updatePreview()}}else{ensureStarterRows();const today=new Date();$('meetingDate').value=today.toISOString().slice(0,10);updatePreview()}
-let autosaveTimer;document.addEventListener('input',()=>{clearTimeout(autosaveTimer);autosaveTimer=setTimeout(save,1200)});
+function fmtDate(s){if(!s)return ""; const d=new Date(s+"T12:00:00");return d.toLocaleDateString("en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}
+function fmtTime(s){if(!s)return ""; const [h,m]=s.split(":").map(Number);return new Date(2000,0,1,h,m).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}
+function personLabel(p){return [p.name,p.callsign].filter(Boolean).join(", ")}
+function voteSentence(yes,no){
+  if(yes===""&&no==="") return "";
+  return ` A vote was taken and the motion ${Number(no||0)>Number(yes||0)?"failed":"passed"} ${yes||0}Y to ${no||0}N.`;
+}
+function textOrNone(arr){return arr.length?`<ol>${arr.map(x=>`<li>${esc(x.text||"")}</li>`).join("")}</ol>`:"<p>None.</p>"}
+
+function refreshPreview(){
+  const officers=state.attendance.filter(p=>p.role!=="Member"&&p.role!=="Guest"&&p.role!=="Other");
+  const generalCount=state.attendance.length;
+  let prior="";
+  if(val("priorMinutesAction")||val("priorMotionBy")){
+    prior=`<p>${esc(val("priorMinutesAction")||"Previous meeting minutes were addressed")}${val("priorMinutesMeeting")?` for the ${esc(val("priorMinutesMeeting"))}`:""}. ${val("priorMotionBy")?`A motion was made by ${esc(val("priorMotionBy"))}`:""}${val("priorSecondBy")?` and seconded by ${esc(val("priorSecondBy"))}`:""}.${voteSentence(val("priorYes"),val("priorNo"))}</p>${val("priorNotes")?`<p>${esc(val("priorNotes"))}</p>`:""}`;
+  } else prior="<p>No entry recorded.</p>";
+
+  let reports=state.reports.length?state.reports.map(r=>`<p><strong>${esc(r.title||"Report")}</strong><br>${esc(r.text||"")}</p>`).join(""):"<p>None recorded.</p>";
+  if(val("reportsMotionBy")||val("reportsSecondBy")) reports+=`<p>A motion was made to accept the officer reports${val("reportsMotionBy")?` by ${esc(val("reportsMotionBy"))}`:""}${val("reportsSecondBy")?` and seconded by ${esc(val("reportsSecondBy"))}`:""}.${voteSentence(val("reportsYes"),val("reportsNo"))}</p>`;
+
+  const adj=(val("adjournTime")||val("adjournMotionBy"))?`<p>A motion to adjourn the meeting was made${val("adjournTime")?` at ${esc(fmtTime(val("adjournTime")))}`:""}${val("adjournMotionBy")?` by ${esc(val("adjournMotionBy"))}`:""}${val("adjournSecondBy")?` and seconded by ${esc(val("adjournSecondBy"))}`:""}.${voteSentence(val("adjournYes"),val("adjournNo"))}</p>`:"<p>No adjournment entry recorded.</p>";
+
+  $("minutesPreview").innerHTML=`
+    <h1>The Blowtorch of Parma Amateur Radio Club</h1>
+    <h2>(TBOPARC)</h2>
+    <h3>${esc(val("meetingType")||"Meeting")}</h3>
+    <p style="text-align:center">${esc(fmtDate(val("meetingDate")))}${val("scheduledTime")?`<br>${esc(fmtTime(val("scheduledTime")))}`:""}${val("location")?`<br>${esc(val("location"))}`:""}</p>
+
+    <div class="section-title">Board of Directors In Attendance:</div>
+    ${officers.length?officers.map(p=>`<p>${esc(personLabel(p))}${p.role?`, ${esc(p.role)}`:""}</p>`).join(""):"<p>None recorded.</p>"}
+
+    <div class="section-title">Call to Order:</div>
+    <p>The meeting was opened${val("callTime")?` at ${esc(fmtTime(val("callTime")))}`:""}${val("calledBy")?` by ${esc(val("calledBy"))}`:""}.${val("quorum")?" A quorum was present.":""}</p>
+
+    <div class="section-title">Reading and Approval of Past Meeting Minutes:</div>
+    ${prior}
+
+    <div class="section-title">Officer Reports:</div>
+    ${reports}
+
+    <div class="section-title">Old Business:</div>
+    ${textOrNone(state.oldBusiness)}
+
+    <div class="section-title">New Business:</div>
+    ${textOrNone(state.newBusiness)}
+
+    <div class="section-title">Announcements:</div>
+    ${textOrNone(state.announcements)}
+
+    <div class="section-title">Presentation:</div>
+    <p>${esc(val("presentation")||"None recorded.")}</p>
+
+    <div class="section-title">Motion to Adjourn:</div>
+    ${adj}
+    <p>There were ${generalCount} people present at the meeting.</p>
+
+    <div class="section-title">Submitted by:</div>
+    <p>${esc([val("secretaryName"),val("secretaryCallsign")].filter(Boolean).join(", ")||"Secretary")}<br>
+    Secretary<br>The Blowtorch of Parma ARC</p>`;
+}
+
+$("refreshPreviewBtn").onclick=refreshPreview;
+$("printBtn").onclick=()=>{refreshPreview();window.print()};
+$("wordBtn").onclick=()=>{
+  refreshPreview();
+  const doc=`<!doctype html><html><head><meta charset="utf-8"><title>TBOPARC Minutes</title></head><body>${$("minutesPreview").innerHTML}</body></html>`;
+  const blob=new Blob([doc],{type:"application/msword"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download=`TBOPARC-Minutes-${val("meetingDate")||"meeting"}.doc`;a.click();URL.revokeObjectURL(a.href);
+};
+$("exportJsonBtn").onclick=()=>{
+  save();const blob=new Blob([localStorage.getItem(STORAGE_KEY)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`TBOPARC-Meeting-${val("meetingDate")||"backup"}.json`;a.click();URL.revokeObjectURL(a.href);
+};
+$("importJsonInput").onchange=async e=>{
+  const f=e.target.files?.[0];if(!f)return;
+  try{const text=await f.text();JSON.parse(text);localStorage.setItem(STORAGE_KEY,text);location.reload()}catch(err){alert("That backup file could not be read.")}
+};
+$("newMeetingBtn").onclick=()=>{
+  if(!confirm("Start a new meeting? The current meeting will be cleared from this device. Export a backup first if you want to keep it."))return;
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
+};
+
+if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
+load();

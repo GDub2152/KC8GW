@@ -1,0 +1,9 @@
+{
+  "name": "TBOPARC Secretary Helper",
+  "short_name": "Secretary Helper",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#eef2f5",
+  "theme_color": "#17324d",
+  "description": "Meeting minutes and attendance helper for The Blowtorch of Parma Amateur Radio Club."
+}
