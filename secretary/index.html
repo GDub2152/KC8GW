@@ -44,15 +44,9 @@
         </select>
       </label>
       <label>Date <input type="date" id="meetingDate"></label>
-      <label>Time display
-        <select id="timeFormat">
-          <option value="12">12-hour (7:30 PM)</option>
-          <option value="24">24-hour (19:30)</option>
-        </select>
-      </label>
-      <label>Scheduled time <input type="time" id="scheduledTime"></label>
+      <label>Scheduled time <input type="text" id="scheduledTime" class="time-entry" inputmode="numeric" maxlength="5" placeholder="HHMM or HH:MM" title="Enter 24-hour time, for example 1930 or 19:30"></label>
       <label>Location <input type="text" id="location" placeholder="Meeting location"></label>
-      <label>Call to order time <input type="time" id="callTime"></label>
+      <label>Call to order time <input type="text" id="callTime" class="time-entry" inputmode="numeric" maxlength="5" placeholder="HHMM or HH:MM" title="Enter 24-hour time, for example 1930 or 19:30"></label>
       <label>Called to order by <input type="text" id="calledBy" placeholder="Name / callsign"></label>
     </div>
 
@@ -155,7 +149,7 @@
   <section id="adjourn" class="panel">
     <h2>Motion to Adjourn</h2>
     <div class="grid two">
-      <label>Adjournment time <input type="time" id="adjournTime"></label>
+      <label>Adjournment time <input type="text" id="adjournTime" class="time-entry" inputmode="numeric" maxlength="5" placeholder="HHMM or HH:MM" title="Enter 24-hour time, for example 1930 or 19:30"></label>
       <label>Motion made by <input type="text" id="adjournMotionBy"></label>
       <label>Seconded by <input type="text" id="adjournSecondBy"></label>
       <label>Yes votes <input type="number" min="0" inputmode="numeric" id="adjournYes"></label>

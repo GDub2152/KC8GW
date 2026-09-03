@@ -1,6 +1,6 @@
 const STORAGE_KEY="tboparcSecretaryHelperV1";
 const $=id=>document.getElementById(id);
-const scalarIds=["meetingType","meetingDate","timeFormat","scheduledTime","location","callTime","calledBy","quorum","priorMinutesAction","priorMinutesMeeting","priorMotionBy","priorSecondBy","priorYes","priorNo","priorNotes","reportsMotionBy","reportsSecondBy","reportsYes","reportsNo","presentation","adjournTime","adjournMotionBy","adjournSecondBy","adjournYes","adjournNo","secretaryName","secretaryCallsign"];
+const scalarIds=["meetingType","meetingDate","scheduledTime","location","callTime","calledBy","quorum","priorMinutesAction","priorMinutesMeeting","priorMotionBy","priorSecondBy","priorYes","priorNo","priorNotes","reportsMotionBy","reportsSecondBy","reportsYes","reportsNo","presentation","adjournTime","adjournMotionBy","adjournSecondBy","adjournYes","adjournNo","secretaryName","secretaryCallsign"];
 let state={attendance:[],reports:[],oldBusiness:[],newBusiness:[],announcements:[]};
 let saveTimer;
 
@@ -91,7 +91,25 @@ document.querySelectorAll(".steps button").forEach(btn=>btn.onclick=()=>{
 });
 
 function fmtDate(s){if(!s)return ""; const d=new Date(s+"T12:00:00");return d.toLocaleDateString("en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}
-function fmtTime(s){if(!s)return ""; const [h,m]=s.split(":").map(Number); if(val("timeFormat")==="24") return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`; return new Date(2000,0,1,h,m).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}
+function normalizeTime(s){
+  s=String(s||"").trim().replace(/\s+/g,"");
+  let h,m;
+  if(/^\d{3,4}$/.test(s)){m=Number(s.slice(-2));h=Number(s.slice(0,-2));}
+  else {const match=s.match(/^(\d{1,2}):(\d{2})$/);if(!match)return "";h=Number(match[1]);m=Number(match[2]);}
+  if(h<0||h>23||m<0||m>59)return "";
+  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+}
+function fmtTime(s){return normalizeTime(s)||String(s||"").trim()}
+const timeEntryIds=["scheduledTime","callTime","adjournTime"];
+timeEntryIds.forEach(id=>{
+  $(id)?.addEventListener("blur",e=>{
+    if(!e.target.value.trim())return;
+    const normalized=normalizeTime(e.target.value);
+    if(normalized){e.target.value=normalized;e.target.setCustomValidity("");scheduleSave();}
+    else {e.target.setCustomValidity("Enter a valid 24-hour time such as 0730, 07:30, 1930, or 19:30.");e.target.reportValidity();}
+  });
+  $(id)?.addEventListener("input",e=>e.target.setCustomValidity(""));
+});
 function personLabel(p){return [p.name,p.callsign].filter(Boolean).join(", ")}
 function voteSentence(yes,no){
   if(yes===""&&no==="") return "";
