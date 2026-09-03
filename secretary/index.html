@@ -21,6 +21,7 @@
   <nav class="steps" aria-label="Meeting sections">
     <button data-target="meeting" class="active">Meeting</button>
     <button data-target="attendance">Attendance</button>
+    <button data-target="attachments">Attachments</button>
     <button data-target="minutes">Minutes</button>
     <button data-target="reports">Reports</button>
     <button data-target="business">Business</button>
@@ -63,9 +64,22 @@
 
     <div id="attendanceList" class="card-list"></div>
 
-    <div class="summary-line">
-      <strong>Total present:</strong> <span id="attendanceCount">0</span>
+    <div class="summary-line total-present-box">
+      <label>Total Present
+        <input type="number" id="totalPresent" min="0" inputmode="numeric" placeholder="Enter full meeting headcount">
+      </label>
+      <small>This is the total from your attendance sheet. It is not calculated from the board/officer entries above.</small>
     </div>
+  </section>
+
+
+  <section id="attachments" class="panel">
+    <div class="panel-head">
+      <div><h2>Attachments</h2><p>Add the attendance list, agenda, reports, photos, PDFs, or other meeting files.</p></div>
+      <label class="file-btn">+ Add Attachments<input type="file" id="attachmentInput" multiple></label>
+    </div>
+    <div class="attachment-note">Attachments are stored locally on this device with the meeting. The generated minutes list the attachment names but do not embed the files themselves.</div>
+    <div id="attachmentList" class="card-list"></div>
   </section>
 
   <section id="minutes" class="panel">

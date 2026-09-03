@@ -1,7 +1,7 @@
 const STORAGE_KEY="tboparcSecretaryHelperV1";
 const $=id=>document.getElementById(id);
-const scalarIds=["meetingType","meetingDate","scheduledTime","location","callTime","calledBy","quorum","priorMinutesAction","priorMinutesMeeting","priorMotionBy","priorSecondBy","priorYes","priorNo","priorNotes","reportsMotionBy","reportsSecondBy","reportsYes","reportsNo","presentation","adjournTime","adjournMotionBy","adjournSecondBy","adjournYes","adjournNo","secretaryName","secretaryCallsign"];
-let state={attendance:[],reports:[],oldBusiness:[],newBusiness:[],announcements:[]};
+const scalarIds=["totalPresent","meetingType","meetingDate","scheduledTime","location","callTime","calledBy","quorum","priorMinutesAction","priorMinutesMeeting","priorMotionBy","priorSecondBy","priorYes","priorNo","priorNotes","reportsMotionBy","reportsSecondBy","reportsYes","reportsNo","presentation","adjournTime","adjournMotionBy","adjournSecondBy","adjournYes","adjournNo","secretaryName","secretaryCallsign"];
+let state={attendance:[],reports:[],oldBusiness:[],newBusiness:[],announcements:[],attachments:[]};
 let saveTimer;
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
@@ -19,7 +19,7 @@ function load(){
   if(!raw){seedDate();renderAll();return}
   try{
     const data=JSON.parse(raw); state.attendance=data.attendance||[];state.reports=data.reports||[];
-    state.oldBusiness=data.oldBusiness||[];state.newBusiness=data.newBusiness||[];state.announcements=data.announcements||[];
+    state.oldBusiness=data.oldBusiness||[];state.newBusiness=data.newBusiness||[];state.announcements=data.announcements||[];state.attachments=data.attachments||[];
     Object.entries(data.scalars||{}).forEach(([k,v])=>setVal(k,v));
   }catch(e){seedDate()}
   renderAll();
@@ -40,7 +40,6 @@ function renderAttendance(){
     </div>`;
     root.appendChild(card);
   });
-  $("attendanceCount").textContent=state.attendance.length;
 }
 function renderReports(){
   const root=$("reportList");root.innerHTML="";
@@ -65,7 +64,44 @@ function renderItems(kind){
     root.appendChild(card);
   });
 }
-function renderAll(){renderAttendance();renderReports();["oldBusiness","newBusiness","announcements"].forEach(renderItems);refreshPreview()}
+
+const ATTACH_DB="tboparcSecretaryAttachmentsV1";
+const ATTACH_STORE="files";
+function openAttachmentDb(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open(ATTACH_DB,1);
+    req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(ATTACH_STORE))req.result.createObjectStore(ATTACH_STORE,{keyPath:"id"})};
+    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+  });
+}
+async function storeAttachment(meta,file){
+  const db=await openAttachmentDb();
+  await new Promise((resolve,reject)=>{const tx=db.transaction(ATTACH_STORE,"readwrite");tx.objectStore(ATTACH_STORE).put({id:meta.id,blob:file});tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});db.close();
+}
+async function getAttachment(id){
+  const db=await openAttachmentDb();
+  const rec=await new Promise((resolve,reject)=>{const req=db.transaction(ATTACH_STORE).objectStore(ATTACH_STORE).get(id);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)});db.close();return rec?.blob||null;
+}
+async function deleteAttachmentFile(id){
+  const db=await openAttachmentDb();
+  await new Promise((resolve,reject)=>{const tx=db.transaction(ATTACH_STORE,"readwrite");tx.objectStore(ATTACH_STORE).delete(id);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});db.close();
+}
+async function clearAttachmentFiles(){
+  const db=await openAttachmentDb();
+  await new Promise((resolve,reject)=>{const tx=db.transaction(ATTACH_STORE,"readwrite");tx.objectStore(ATTACH_STORE).clear();tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});db.close();
+}
+function formatBytes(n){if(n<1024)return `${n} B`;if(n<1048576)return `${(n/1024).toFixed(1)} KB`;return `${(n/1048576).toFixed(1)} MB`}
+function renderAttachments(){
+  const root=$("attachmentList");if(!root)return;root.innerHTML="";
+  if(!state.attachments.length){root.innerHTML='<div class="entry-card">No attachments added.</div>';return}
+  state.attachments.forEach(a=>{
+    const card=document.createElement("div");card.className="entry-card attachment-row";
+    card.innerHTML=`<div class="attachment-meta"><div class="attachment-name">${esc(a.name)}</div><div class="attachment-details">${esc(a.type||"File")} · ${formatBytes(a.size||0)}</div></div><button class="secondary small" data-download-attachment="${a.id}">Download</button><button class="danger small" data-remove-attachment="${a.id}">Remove</button>`;
+    root.appendChild(card);
+  });
+}
+
+function renderAll(){renderAttendance();renderReports();["oldBusiness","newBusiness","announcements"].forEach(renderItems);renderAttachments();refreshPreview()}
 
 document.addEventListener("input",e=>{
   if(scalarIds.includes(e.target.id)) scheduleSave();
@@ -75,10 +111,22 @@ document.addEventListener("input",e=>{
 });
 document.addEventListener("change",e=>{if(scalarIds.includes(e.target.id))scheduleSave()});
 
+
+$("attachmentInput").onchange=async e=>{
+  const files=[...(e.target.files||[])];if(!files.length)return;
+  for(const file of files){
+    const meta={id:uid(),name:file.name,type:file.type||"File",size:file.size,addedAt:new Date().toISOString()};
+    try{await storeAttachment(meta,file);state.attachments.push(meta)}catch(err){alert(`Could not store ${file.name} on this device.`)}
+  }
+  e.target.value="";renderAttachments();scheduleSave();refreshPreview();
+};
+
 $("addPersonBtn").onclick=()=>{state.attendance.push({id:uid(),name:"",callsign:"",role:"Member"});renderAttendance();scheduleSave()};
 $("addReportBtn").onclick=()=>{state.reports.push({id:uid(),title:"",text:""});renderReports();scheduleSave()};
 document.querySelectorAll("[data-add-item]").forEach(b=>b.onclick=()=>{const k=b.dataset.addItem;state[k].push({id:uid(),text:""});renderItems(k);scheduleSave()});
-document.addEventListener("click",e=>{
+document.addEventListener("click",async e=>{
+  if(e.target.dataset.downloadAttachment){const a=state.attachments.find(x=>x.id===e.target.dataset.downloadAttachment);if(a){const blob=await getAttachment(a.id);if(blob){const link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download=a.name;link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000)}else alert("The attachment file is not available on this device.")}}
+  if(e.target.dataset.removeAttachment){const id=e.target.dataset.removeAttachment;await deleteAttachmentFile(id).catch(()=>{});state.attachments=state.attachments.filter(x=>x.id!==id);renderAttachments();scheduleSave();refreshPreview()}
   if(e.target.dataset.removeAtt){state.attendance=state.attendance.filter(x=>x.id!==e.target.dataset.removeAtt);renderAttendance();scheduleSave()}
   if(e.target.dataset.removeReport){state.reports=state.reports.filter(x=>x.id!==e.target.dataset.removeReport);renderReports();scheduleSave()}
   if(e.target.dataset.removeKind){const k=e.target.dataset.removeKind;state[k]=state[k].filter(x=>x.id!==e.target.dataset.removeId);renderItems(k);scheduleSave()}
@@ -119,7 +167,7 @@ function textOrNone(arr){return arr.length?`<ol>${arr.map(x=>`<li>${esc(x.text||
 
 function refreshPreview(){
   const officers=state.attendance.filter(p=>p.role!=="Member"&&p.role!=="Guest"&&p.role!=="Other");
-  const generalCount=state.attendance.length;
+  const generalCount=String(val("totalPresent")||"0").trim();
   let prior="";
   if(val("priorMinutesAction")||val("priorMotionBy")){
     prior=`<p>${esc(val("priorMinutesAction")||"Previous meeting minutes were addressed")}${val("priorMinutesMeeting")?` for the ${esc(val("priorMinutesMeeting"))}`:""}. ${val("priorMotionBy")?`A motion was made by ${esc(val("priorMotionBy"))}`:""}${val("priorSecondBy")?` and seconded by ${esc(val("priorSecondBy"))}`:""}.${voteSentence(val("priorYes"),val("priorNo"))}</p>${val("priorNotes")?`<p>${esc(val("priorNotes"))}</p>`:""}`;
@@ -162,7 +210,10 @@ function refreshPreview(){
 
     <div class="section-title">Motion to Adjourn:</div>
     ${adj}
-    <p>There were ${generalCount} people present at the meeting.</p>
+    <p>There were ${esc(generalCount)} people present at the meeting.</p>
+
+    <div class="section-title">Attachments:</div>
+    ${state.attachments.length?`<ul>${state.attachments.map(a=>`<li>${esc(a.name)}</li>`).join("")}</ul>`:"<p>None.</p>"}
 
     <div class="section-title">Submitted by:</div>
     <p>${esc([val("secretaryName"),val("secretaryCallsign")].filter(Boolean).join(", ")||"Secretary")}<br>
@@ -189,7 +240,7 @@ $("importJsonInput").onchange=async e=>{
 $("newMeetingBtn").onclick=()=>{
   if(!confirm("Start a new meeting? The current meeting will be cleared from this device. Export a backup first if you want to keep it."))return;
   localStorage.removeItem(STORAGE_KEY);
-  location.reload();
+  clearAttachmentFiles().finally(()=>location.reload());
 };
 
 if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
