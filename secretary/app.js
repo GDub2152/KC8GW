@@ -1,6 +1,6 @@
 const STORAGE_KEY="tboparcSecretaryHelperV1";
 const $=id=>document.getElementById(id);
-const scalarIds=["meetingType","meetingDate","scheduledTime","location","callTime","calledBy","quorum","priorMinutesAction","priorMinutesMeeting","priorMotionBy","priorSecondBy","priorYes","priorNo","priorNotes","reportsMotionBy","reportsSecondBy","reportsYes","reportsNo","presentation","adjournTime","adjournMotionBy","adjournSecondBy","adjournYes","adjournNo","secretaryName","secretaryCallsign"];
+const scalarIds=["meetingType","meetingDate","timeFormat","scheduledTime","location","callTime","calledBy","quorum","priorMinutesAction","priorMinutesMeeting","priorMotionBy","priorSecondBy","priorYes","priorNo","priorNotes","reportsMotionBy","reportsSecondBy","reportsYes","reportsNo","presentation","adjournTime","adjournMotionBy","adjournSecondBy","adjournYes","adjournNo","secretaryName","secretaryCallsign"];
 let state={attendance:[],reports:[],oldBusiness:[],newBusiness:[],announcements:[]};
 let saveTimer;
 
@@ -34,7 +34,7 @@ function renderAttendance(){
       <label>Name<input data-att="${p.id}" data-field="name" value="${esc(p.name)}" placeholder="Name"></label>
       <label>Callsign<input data-att="${p.id}" data-field="callsign" value="${esc(p.callsign)}" placeholder="Optional"></label>
       <label>Role<select data-att="${p.id}" data-field="role">
-        ${["Member","President","Vice President","Secretary","Treasurer","Repeater/License Trustee","Director-at-Large","Guest","Other"].map(x=>`<option ${p.role===x?"selected":""}>${x}</option>`).join("")}
+        ${["Member","President","Vice President","Secretary","Treasurer","Trustee1","Trustee2","Repeater/License Trustee","Director-at-Large","Guest","Other"].map(x=>`<option ${p.role===x?"selected":""}>${x}</option>`).join("")}
       </select></label>
       <button class="danger small" data-remove-att="${p.id}">Remove</button>
     </div>`;
@@ -91,7 +91,7 @@ document.querySelectorAll(".steps button").forEach(btn=>btn.onclick=()=>{
 });
 
 function fmtDate(s){if(!s)return ""; const d=new Date(s+"T12:00:00");return d.toLocaleDateString("en-US",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}
-function fmtTime(s){if(!s)return ""; const [h,m]=s.split(":").map(Number);return new Date(2000,0,1,h,m).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}
+function fmtTime(s){if(!s)return ""; const [h,m]=s.split(":").map(Number); if(val("timeFormat")==="24") return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`; return new Date(2000,0,1,h,m).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}
 function personLabel(p){return [p.name,p.callsign].filter(Boolean).join(", ")}
 function voteSentence(yes,no){
   if(yes===""&&no==="") return "";
