@@ -1,0 +1,144 @@
+{
+  "updated": "2026-09-16",
+  "disclaimer": "Schedules are informational. Verify with the net or repeater owner before relying on a listing.",
+  "nets": [
+    {
+      "name": "Barometer Net",
+      "type": "RF",
+      "days": [
+        1
+      ],
+      "time": "07:00",
+      "duration": 60,
+      "tz": "America/New_York",
+      "frequency": "147.390+ MHz",
+      "tone": "PL 114.8",
+      "area": "Doylestown, Ohio",
+      "lat": 40.9701,
+      "lon": -81.6965,
+      "source": "https://w8wky.org/local-nets/",
+      "notes": "General morning net on the W8WKY repeater."
+    },
+    {
+      "name": "Summit County ARES Net",
+      "type": "RF",
+      "days": [
+        1
+      ],
+      "time": "19:30",
+      "duration": 60,
+      "tz": "America/New_York",
+      "frequency": "444.550+ MHz",
+      "tone": "PL 131.8",
+      "area": "Akron, Ohio",
+      "lat": 41.0814,
+      "lon": -81.519,
+      "source": "https://w8wky.org/local-nets/",
+      "notes": "ARES training and preparedness net; see source for additional repeater inputs."
+    },
+    {
+      "name": "Parma Radio Club Net",
+      "type": "RF",
+      "days": [
+        1
+      ],
+      "weeks": [
+        1,
+        3
+      ],
+      "time": "20:00",
+      "duration": 60,
+      "tz": "America/New_York",
+      "frequency": "145.410- MHz",
+      "tone": "See club listing",
+      "area": "Parma, Ohio",
+      "lat": 41.4048,
+      "lon": -81.7229,
+      "source": "https://arrl-ohio.org/wp-content/uploads/2024/12/OSJ_December_2024.pdf",
+      "notes": "First and third Monday of the month; linked system listed by ARRL Ohio."
+    },
+    {
+      "name": "Tri-County Traffic & Training Net",
+      "type": "RF",
+      "days": [
+        0,
+        2,
+        5
+      ],
+      "time": "21:00",
+      "duration": 60,
+      "tz": "America/New_York",
+      "frequency": "147.015 MHz",
+      "tone": "PL 110.9",
+      "area": "Northeast Ohio",
+      "lat": 41.1537,
+      "lon": -81.3579,
+      "source": "https://arrl-ohio.org/ohio-section-traffic-manager/",
+      "notes": "Ohio Section VHF traffic and training net."
+    },
+    {
+      "name": "East Coast Reflector Morning Brew",
+      "type": "ALLSTAR_ECHOLINK",
+      "days": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "time": "07:00",
+      "duration": 120,
+      "tz": "America/New_York",
+      "allstar": "27339 / 45192 / 45225",
+      "echolink": "ECR9050 927382",
+      "area": "Worldwide",
+      "source": "https://www.eastcoastreflector.com/welcome-to-ecr/",
+      "notes": "Weekday Morning Brew (except holidays). Also accessible through other ECR bridges."
+    },
+    {
+      "name": "East Coast Reflector Tech / Swap Net",
+      "type": "ALLSTAR_ECHOLINK",
+      "days": [
+        2
+      ],
+      "time": "20:00",
+      "duration": 120,
+      "tz": "America/New_York",
+      "allstar": "27339 / 45192 / 45225",
+      "echolink": "ECR9050 927382",
+      "area": "Worldwide",
+      "source": "https://www.eastcoastreflector.com/tech-net/",
+      "notes": "Tuesday technical Q&A and swap net."
+    },
+    {
+      "name": "East Coast Reflector 40m SSB Net",
+      "type": "RF",
+      "days": [
+        6
+      ],
+      "time": "09:00",
+      "duration": 60,
+      "tz": "America/New_York",
+      "frequency": "7.245 MHz \u00b1 QRM",
+      "tone": "SSB",
+      "area": "HF / Worldwide",
+      "source": "https://www.eastcoastreflector.com/welcome-to-ecr/",
+      "notes": "Saturday 40-meter SSB net; actual frequency may move for band conditions."
+    },
+    {
+      "name": "East Coast Reflector Newsline",
+      "type": "ALLSTAR_ECHOLINK",
+      "days": [
+        0
+      ],
+      "time": "13:00",
+      "duration": 60,
+      "tz": "America/New_York",
+      "allstar": "27339 / 45192 / 45225",
+      "echolink": "ECR9050 927382",
+      "area": "Worldwide",
+      "source": "https://www.eastcoastreflector.com/welcome-to-ecr/",
+      "notes": "Amateur Radio Newsline playback on the East Coast Reflector."
+    }
+  ]
+}
