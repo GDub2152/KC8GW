@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-16",
+  "updated": "2026-09-17",
   "disclaimer": "Schedules are informational. Verify with the net or repeater owner before relying on a listing.",
   "nets": [
     {
@@ -112,7 +112,7 @@
     },
     {
       "name": "East Coast Reflector 40m SSB Net",
-      "type": "RF",
+      "type": "HF",
       "days": [
         6
       ],
@@ -120,10 +120,11 @@
       "duration": 60,
       "tz": "America/New_York",
       "frequency": "7.245 MHz \u00b1 QRM",
-      "tone": "SSB",
+      "tone": "LSB",
       "area": "HF / Worldwide",
       "source": "https://www.eastcoastreflector.com/welcome-to-ecr/",
-      "notes": "Saturday 40-meter SSB net; actual frequency may move for band conditions."
+      "notes": "Saturday 40-meter SSB net; actual frequency may move for band conditions.",
+      "band": "40m"
     },
     {
       "name": "East Coast Reflector Newsline",
@@ -139,6 +140,126 @@
       "area": "Worldwide",
       "source": "https://www.eastcoastreflector.com/welcome-to-ecr/",
       "notes": "Amateur Radio Newsline playback on the East Coast Reflector."
+    },
+    {
+      "name": "PPRAA 10m Net",
+      "type": "HF",
+      "band": "10m",
+      "days": [
+        4
+      ],
+      "time": "21:00",
+      "duration": 60,
+      "tz": "America/New_York",
+      "frequency": "28.390 MHz",
+      "tone": "USB",
+      "area": "Colorado / propagation permitting",
+      "source": "https://ppraa.org/",
+      "notes": "Published 19:00 MDT; shown as 21:00 Eastern."
+    },
+    {
+      "name": "Maritime Mobile Service Network",
+      "type": "HF",
+      "band": "20m",
+      "days": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "time": "12:00",
+      "duration": 600,
+      "tz": "America/New_York",
+      "frequency": "14.300 MHz",
+      "tone": "USB",
+      "area": "International",
+      "source": "https://www.mmsn.org/",
+      "notes": "Long-running maritime mobile service net; verify current operating window at source."
+    },
+    {
+      "name": "East Coast Reflector 20m Net",
+      "type": "HF",
+      "band": "20m",
+      "days": [
+        4
+      ],
+      "time": "10:00",
+      "duration": 60,
+      "tz": "America/New_York",
+      "frequency": "14.317 MHz",
+      "tone": "USB",
+      "area": "Eastern U.S. / propagation permitting",
+      "source": "https://www.eastcoastreflector.com/",
+      "notes": "Thursday HF net listing; frequency may move for QRM."
+    },
+    {
+      "name": "Ohio Single Sideband Net \u2014 Morning",
+      "type": "HF",
+      "band": "80m",
+      "days": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "time": "10:30",
+      "duration": 45,
+      "tz": "America/New_York",
+      "frequency": "3.9725 MHz",
+      "tone": "LSB",
+      "area": "Ohio / regional",
+      "source": "https://arrl-ohio.org/ohio-section-traffic-manager/",
+      "notes": "Daily Ohio traffic net."
+    },
+    {
+      "name": "Ohio Single Sideband Net \u2014 Afternoon",
+      "type": "HF",
+      "band": "80m",
+      "days": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "time": "16:15",
+      "duration": 45,
+      "tz": "America/New_York",
+      "frequency": "3.9725 MHz",
+      "tone": "LSB",
+      "area": "Ohio / regional",
+      "source": "https://arrl-ohio.org/ohio-section-traffic-manager/",
+      "notes": "Daily Ohio traffic net."
+    },
+    {
+      "name": "Ohio Single Sideband Net \u2014 Evening",
+      "type": "HF",
+      "band": "80m",
+      "days": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "time": "18:45",
+      "duration": 45,
+      "tz": "America/New_York",
+      "frequency": "3.9725 MHz",
+      "tone": "LSB",
+      "area": "Ohio / regional",
+      "source": "https://arrl-ohio.org/ohio-section-traffic-manager/",
+      "notes": "Daily Ohio traffic net."
     }
   ]
 }
