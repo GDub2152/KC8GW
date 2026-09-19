@@ -1,8 +1,139 @@
-const NOAA={kp:'https://services.swpc.noaa.gov/json/planetary_k_index_1m.json',flux:'https://services.swpc.noaa.gov/json/f107_cm_flux.json',scales:'https://services.swpc.noaa.gov/products/noaa-scales.json'};
-const byId=id=>document.getElementById(id);const set=(id,v)=>{const e=byId(id);if(e)e.textContent=v};
-function condition(kp,flux,band){if(kp>=6)return'poor';if(['10m','12m','15m'].includes(band))return flux>=150&&kp<4?'good':flux>=105&&kp<5?'fair':'poor';if(['17m','20m'].includes(band))return kp<4?'good':kp<6?'fair':'poor';if(['30m','40m','80m','160m'].includes(band))return kp<5?'good':kp<7?'fair':'poor';return kp<4?'fair':'poor'}
-function renderBands(holder,kp,flux){if(!holder)return;const bands=['160m','80m','40m','30m','20m','17m','15m','12m','10m','6m'];holder.innerHTML=bands.map(b=>{const c=condition(kp,flux,b);return`<div class="band ${c}"><strong>${b}</strong><span>${c.toUpperCase()}</span></div>`}).join('')}
-function newest(arr){return Array.isArray(arr)&&arr.length?arr[arr.length-1]:{}}
-async function json(url){const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error(`${r.status}`);return r.json()}
-async function loadSolar(){set('homeSolarStatus','Loading NOAA data…');set('solarUpdated','Loading NOAA data…');try{const[kpd,fd,sd]=await Promise.all([json(NOAA.kp),json(NOAA.flux),json(NOAA.scales)]);const k=newest(kpd),f=newest(fd);const kp=Number(k.kp_index??k.estimated_kp??2);const flux=Number(f.flux??f.observed_flux??f.adjusted_flux??120);const current=sd['0']||sd[0]||{};const r=current.R?.Scale??current.R??'R0';const g=current.G?.Scale??current.G??'G0';set('kpIndex',kp.toFixed(1));set('homeKp',kp.toFixed(1));set('tickerKp',kp.toFixed(1));set('solarFlux',Math.round(flux));set('homeFlux',Math.round(flux));set('rScale',String(r).startsWith('R')?r:`R${r}`);set('homeR',String(r).startsWith('R')?r:`R${r}`);set('gScale',String(g).startsWith('G')?g:`G${g}`);set('homeG',String(g).startsWith('G')?g:`G${g}`);const stamp=k.time_tag||f.time_tag||new Date().toISOString();const msg=`NOAA data updated ${new Date(stamp).toLocaleString()}`;set('solarUpdated',msg);set('homeSolarStatus',msg);renderBands(byId('bandGrid'),kp,flux);renderBands(byId('homeBandGrid'),kp,flux)}catch(err){const msg='Live NOAA data is temporarily unavailable. Showing conservative estimates.';set('solarUpdated',msg);set('homeSolarStatus',msg);renderBands(byId('bandGrid'),3,110);renderBands(byId('homeBandGrid'),3,110)}}
-byId('refreshSolar')?.addEventListener('click',loadSolar);loadSolar();
+const NOAA = {
+  kp: 'https://services.swpc.noaa.gov/json/planetary_k_index_1m.json',
+  flux: 'https://services.swpc.noaa.gov/json/f107_cm_flux.json',
+  scales: 'https://services.swpc.noaa.gov/products/noaa-scales.json'
+};
+
+const byId = id => document.getElementById(id);
+const set = (id, value) => {
+  const element = byId(id);
+  if (element) element.textContent = value;
+};
+
+function condition(kp, flux, band) {
+  if (kp >= 6) return 'poor';
+  if (['10m', '12m', '15m'].includes(band)) {
+    return flux >= 150 && kp < 4 ? 'good' : flux >= 105 && kp < 5 ? 'fair' : 'poor';
+  }
+  if (['17m', '20m'].includes(band)) return kp < 4 ? 'good' : kp < 6 ? 'fair' : 'poor';
+  if (['30m', '40m', '80m', '160m'].includes(band)) return kp < 5 ? 'good' : kp < 7 ? 'fair' : 'poor';
+  return kp < 4 ? 'fair' : 'poor';
+}
+
+function renderBands(holder, kp, flux) {
+  if (!holder) return;
+  const bands = ['160m', '80m', '40m', '30m', '20m', '17m', '15m', '12m', '10m', '6m'];
+  holder.innerHTML = bands.map(band => {
+    const rating = condition(kp, flux, band);
+    return `<div class="band ${rating}"><strong>${band}</strong><span>${rating.toUpperCase()}</span></div>`;
+  }).join('');
+}
+
+function noaaDate(value) {
+  if (!value) return new Date(0);
+  const text = String(value);
+  return new Date(/[zZ]|[+-]\d\d:\d\d$/.test(text) ? text : `${text}Z`);
+}
+
+function latestByTime(records) {
+  if (!Array.isArray(records) || !records.length) return null;
+  return records.reduce((latest, record) => {
+    if (!latest) return record;
+    return noaaDate(record.time_tag) > noaaDate(latest.time_tag) ? record : latest;
+  }, null);
+}
+
+function finiteNumber(...values) {
+  for (const value of values) {
+    if (value === null || value === undefined || value === '') continue;
+    const number = Number(value);
+    if (Number.isFinite(number)) return number;
+  }
+  return null;
+}
+
+async function json(url) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    const separator = url.includes('?') ? '&' : '?';
+    const response = await fetch(`${url}${separator}_=${Date.now()}`, {
+      cache: 'no-store',
+      signal: controller.signal
+    });
+    if (!response.ok) throw new Error(`NOAA request failed: ${response.status}`);
+    return await response.json();
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function scaleValue(current, key) {
+  const raw = current?.[key]?.Scale ?? current?.[key];
+  if (raw === null || raw === undefined || raw === '') return null;
+  const text = String(raw);
+  return text.startsWith(key) ? text : `${key}${text}`;
+}
+
+async function loadSolar() {
+  set('homeSolarStatus', 'Loading NOAA space-weather data…');
+  set('solarUpdated', 'Loading NOAA space-weather data…');
+
+  const [kpResult, fluxResult, scalesResult] = await Promise.allSettled([
+    json(NOAA.kp),
+    json(NOAA.flux),
+    json(NOAA.scales)
+  ]);
+
+  const kpRecord = kpResult.status === 'fulfilled' ? latestByTime(kpResult.value) : null;
+  const fluxRecord = fluxResult.status === 'fulfilled' ? latestByTime(fluxResult.value) : null;
+  const currentScales = scalesResult.status === 'fulfilled'
+    ? (scalesResult.value?.['0'] || scalesResult.value?.[0] || null)
+    : null;
+
+  const kp = finiteNumber(kpRecord?.kp_index, kpRecord?.estimated_kp);
+  const flux = finiteNumber(fluxRecord?.flux, fluxRecord?.observed_flux, fluxRecord?.adjusted_flux);
+  const rScale = scaleValue(currentScales, 'R');
+  const gScale = scaleValue(currentScales, 'G');
+
+  set('kpIndex', kp === null ? '—' : kp.toFixed(1));
+  set('homeKp', kp === null ? '—' : kp.toFixed(1));
+  set('tickerKp', kp === null ? '—' : kp.toFixed(1));
+  set('solarFlux', flux === null ? '—' : Math.round(flux));
+  set('homeFlux', flux === null ? '—' : Math.round(flux));
+  set('rScale', rScale || '—');
+  set('homeR', rScale || '—');
+  set('gScale', gScale || '—');
+  set('homeG', gScale || '—');
+
+  const successfulFeeds = [kp !== null, flux !== null, Boolean(rScale || gScale)].filter(Boolean).length;
+  const newestStamp = [kpRecord?.time_tag, fluxRecord?.time_tag]
+    .filter(Boolean)
+    .sort((a, b) => noaaDate(b) - noaaDate(a))[0];
+  const displayTime = newestStamp ? noaaDate(newestStamp) : new Date();
+  const timeText = displayTime.toLocaleString([], {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZoneName: 'short'
+  });
+
+  let message;
+  if (successfulFeeds === 3) {
+    message = `Updated ${timeText} · NOAA SWPC`;
+  } else if (successfulFeeds > 0) {
+    message = `Updated ${timeText} · Some NOAA readings are temporarily unavailable`;
+  } else {
+    message = 'NOAA data is temporarily unavailable. Retrying automatically.';
+  }
+  set('solarUpdated', message);
+  set('homeSolarStatus', message);
+
+  renderBands(byId('bandGrid'), kp ?? 3, flux ?? 110);
+  renderBands(byId('homeBandGrid'), kp ?? 3, flux ?? 110);
+}
+
+byId('refreshSolar')?.addEventListener('click', loadSolar);
+loadSolar();
+setInterval(loadSolar, 5 * 60 * 1000);
