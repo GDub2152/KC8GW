@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b1723">
+  <title>KC8GW Repeater Road Map</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <link rel="stylesheet" href="styles.css?v=12-easy-csv">
+</head>
+<body>
+  <header>
+    <div><span class="eyebrow">KC8GW</span><h1>Repeater Road Map</h1></div>
+    <div class="header-actions"><a class="site-home" href="../index.html">KC8GW.COM</a><button id="quickImport" class="primary">Upload CSV</button>
+      <button id="filterToggle" class="mobile-only" aria-expanded="false" aria-controls="filters">☰ Filters</button>
+      <button id="locate" class="primary">◎ <span>Use my location</span></button>
+    </div>
+  </header>
+
+  <section id="filters" class="controls" aria-label="Map filters">
+    <div class="mobile-filter-head mobile-only"><strong>Map filters</strong><button id="closeFilters" aria-label="Close filters">✕</button></div>
+    <div class="control-group">
+      <div class="label-row"><strong>Bands</strong><span><button id="allBands" class="link">All</button> · <button id="clearBands" class="link">Clear</button></span></div>
+      <div id="bands" class="chips"></div>
+    </div>
+    <div class="control-group compact">
+      <label for="range"><strong>Range</strong> <output id="rangeLabel">50 mi</output></label>
+      <input id="range" type="range" min="10" max="150" step="5" value="50">
+    </div>
+    <div class="control-group compact">
+      <label for="coverageOpacity"><strong>Ring fill</strong> <output id="opacityLabel">4%</output></label>
+      <input id="coverageOpacity" type="range" min="0" max="20" step="1" value="4">
+    </div>
+    <div class="control-group compact">
+      <label for="outlineOpacity"><strong>Ring outline</strong> <output id="outlineLabel">25%</output></label>
+      <input id="outlineOpacity" type="range" min="0" max="100" step="5" value="25">
+    </div>
+    <label class="switch map-lock-switch"><input id="follow" type="checkbox" checked><span id="followLabel">🔒 Map locked to GPS</span></label>
+    <button id="importButton">Upload CSV / JSON (select one or more)</button>
+    <input id="fileInput" type="file" multiple accept=".json,.csv,application/json,text/csv" hidden>
+  </section>
+
+  <main>
+    <div id="importNotice" class="import-notice" role="status" aria-live="polite"></div><div id="map" aria-label="Repeater map"></div>
+    <div class="map-search">
+      <div class="search-row">
+        <span aria-hidden="true">⌕</span>
+        <input id="repeaterSearch" type="search" placeholder="Callsign, frequency or city" autocomplete="off" aria-label="Search imported repeaters">
+        <button id="clearSearch" aria-label="Clear search">✕</button>
+      </div>
+      <div id="searchResults" class="search-results" role="listbox"></div>
+    </div>
+    <div class="coverage-key"><span></span>Estimated radius · not guaranteed coverage</div>
+    <a class="rb-credit" href="https://www.repeaterbook.com/" target="_blank" rel="noopener">Data courtesy of RepeaterBook.com ↗</a>
+    <aside>
+      <div class="status"><strong id="count">0 repeaters</strong><span id="gpsStatus">Tap “Use my location” to begin</span><span id="datasetStatus">Upload a repeater CSV to begin</span></div>
+      <div id="list" class="repeater-list"></div>
+    </aside>
+  </main>
+
+  <nav class="mobile-nav mobile-only" aria-label="Map views">
+    <button id="mapView" class="active" aria-pressed="true">⌖<span>Map</span></button>
+    <button id="listView" aria-pressed="false">☷<span>Repeaters</span></button>
+    <button id="mobileLocate">◎<span>My location</span></button>
+    <button id="mobileMapLock" class="active" aria-pressed="true">🔒<span>Locked</span></button>
+  </nav>
+  <div id="filterShade" class="filter-shade mobile-only"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="app.js?v=12-easy-csv"></script>
+</body>
+</html>
