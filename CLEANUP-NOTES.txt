@@ -1,0 +1,17 @@
+KC8GW website cleanup — October 6, 2026
+
+Upload the CONTENTS of KC8GW-main into the root of the existing KC8GW website repository. Do not upload the KC8GW-main folder as an extra nested folder. Include assets/css/cleanup.css and assets/data/gallery.json.
+
+Changes:
+- The same 10 tabs and order on every public page.
+- The current page is highlighted and marked for screen readers.
+- NETS restored on the Solar page; extra legacy tabs removed from older pages.
+- Matching headers, footers, page titles, card headers, and spacing.
+- Cleaner dark surfaces, readable labels, and responsive menus / grids.
+- MEDIA now links to the photo gallery. Gallery includes site navigation and loads the 28 bundled photos without relying on the GitHub listing API.
+- Fixed the local Communicator address and the Secretary tool link.
+- Secretary tools have a return-to-site link; meeting forms are preserved.
+
+Validation: all 14 public HTML pages checked for identical navigation, correct active tabs, existing local link and asset targets, and main-content landmarks. Shared navigation JavaScript passed its syntax check.
+
+This ZIP updates the attached KC8GW website. The separate community net directory is at https://kc8gw-net-directory.nortonnfriends.chatgpt.site and has its own saved submissions and theme toggle.

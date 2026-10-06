@@ -1,201 +1,30 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>KC8GW Station Gallery</title>
+<title>Photo Gallery | KC8GW</title>
 <meta name="description" content="KC8GW amateur radio station and project photo gallery.">
-<style>
-:root{
-  --bg:#071019;
-  --panel:#0b1722;
-  --panel2:#0d2130;
-  --line:#1c4f72;
-  --text:#eaf4ff;
-  --muted:#9db8c8;
-  --blue:#66d2ff;
-  --green:#89ffc7;
-}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{
-  margin:0;
-  font-family:Arial,Helvetica,sans-serif;
-  background:linear-gradient(180deg,#061019,#081722 55%,#061019);
-  color:var(--text);
-  line-height:1.5;
-}
-a{color:inherit}
-.wrap{max-width:1180px;margin:auto;padding:18px}
-.hero{
-  border:1px solid var(--line);
-  border-radius:22px;
-  padding:38px 26px;
-  background:
-    radial-gradient(circle at 82% 15%,rgba(26,164,255,.2),transparent 28%),
-    radial-gradient(circle at 12% 95%,rgba(0,255,157,.12),transparent 30%),
-    linear-gradient(135deg,#081420,#0b2235 55%,#071019);
-  box-shadow:0 18px 45px rgba(0,0,0,.35);
-}
-.eyebrow{
-  font-size:12px;
-  letter-spacing:2.2px;
-  text-transform:uppercase;
-  color:var(--blue);
-  font-weight:700;
-}
-h1{
-  margin:7px 0 4px;
-  font-size:clamp(42px,8vw,74px);
-  line-height:.98;
-}
-.subtitle{color:#c5ddec;font-size:18px}
-.toolbar{
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-  margin:18px 0;
-  padding:14px 16px;
-  background:var(--panel);
-  border:1px solid #173a50;
-  border-radius:15px;
-}
-.status{color:var(--muted);font-size:14px}
-.btn{
-  display:inline-block;
-  border:1px solid #285a77;
-  background:#102b3d;
-  color:#d8f2ff;
-  border-radius:10px;
-  padding:9px 13px;
-  text-decoration:none;
-  cursor:pointer;
-  font:inherit;
-}
-.btn:hover{border-color:#4aa6d8}
-.gallery{
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:12px;
-}
-.tile{
-  display:block;
-  position:relative;
-  aspect-ratio:4/3;
-  padding:0;
-  overflow:hidden;
-  border:1px solid #214b64;
-  border-radius:14px;
-  background:#0a1822;
-  cursor:pointer;
-}
-.tile img{
-  display:block;
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  transition:transform .2s ease,filter .2s ease;
-}
-.tile:hover img{transform:scale(1.035);filter:brightness(1.07)}
-.tile:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
-.empty{
-  grid-column:1/-1;
-  background:var(--panel);
-  border:1px solid #173a50;
-  border-radius:15px;
-  padding:30px;
-  text-align:center;
-  color:var(--muted);
-}
-.footer{
-  padding:32px 12px 20px;
-  text-align:center;
-  color:var(--muted);
-  font-size:13px;
-}
-
-/* Lightbox / click-through viewer */
-.lightbox{
-  position:fixed;
-  inset:0;
-  z-index:9999;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  background:rgba(0,0,0,.92);
-  padding:18px;
-}
-.lightbox.open{display:flex}
-.viewer{
-  position:relative;
-  width:min(1100px,100%);
-  height:min(86vh,850px);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.viewer img{
-  max-width:100%;
-  max-height:100%;
-  object-fit:contain;
-  border-radius:10px;
-}
-.close,.prev,.next{
-  position:absolute;
-  z-index:2;
-  border:1px solid rgba(255,255,255,.25);
-  background:rgba(5,16,25,.78);
-  color:white;
-  cursor:pointer;
-  border-radius:999px;
-  width:48px;
-  height:48px;
-  font-size:28px;
-}
-.close{right:8px;top:8px;font-size:24px}
-.prev{left:8px;top:50%;transform:translateY(-50%)}
-.next{right:8px;top:50%;transform:translateY(-50%)}
-.counter{
-  position:absolute;
-  bottom:8px;
-  left:50%;
-  transform:translateX(-50%);
-  padding:7px 11px;
-  border-radius:999px;
-  background:rgba(5,16,25,.78);
-  color:#d9eaf4;
-  font-size:13px;
-}
-@media(max-width:900px){.gallery{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:650px){
-  .wrap{padding:10px}
-  .gallery{grid-template-columns:repeat(2,1fr);gap:8px}
-  .hero{padding:30px 18px}
-  .prev,.next,.close{width:42px;height:42px}
-}
-@media(max-width:380px){.gallery{grid-template-columns:1fr}}
-</style>
-</head>
-<body>
-<main class="wrap">
-  <header class="hero">
-    <div class="eyebrow">KC8GW • Amateur Radio</div>
-    <h1>Station Gallery</h1>
-    <div class="subtitle">Radio, antennas, projects, portable operating, aviation and everything happening around the shack.</div>
-  </header>
-
-  <section class="toolbar">
-    <div id="status" class="status">Loading photos from the KC8GW GitHub repository…</div>
-    <a class="btn" href="https://kc8gw.com/">← Back to KC8GW.com</a>
+<link rel="stylesheet" href="assets/css/style.css"><link rel="stylesheet" href="assets/css/cleanup.css?v=20261006"></head>
+<body class="gallery-page">
+<a class="skip-link" href="#main-content">Skip to content</a><header class="topbar">
+  <a class="logo-wrap" href="index.html" aria-label="KC8GW home"><img class="logo" src="assets/images/kc8gw-patch.png" alt="KC8GW patch"></a>
+  <div class="brand"><h1>KC8GW</h1><p>AMATEUR EXTRA · GMRS WSGZ373</p><p><b>COMMUNICATE</b> · <span class="blue-text">FLY</span> · <span class="red-text">EXPLORE</span></p></div>
+  <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">MENU</button>
+  <nav id="site-nav" aria-label="Main navigation">
+    <a href="index.html">HOME</a><a href="qrz.html">QRZ</a><a href="liveatc.html">LIVE ATC</a><a href="weather.html">WEATHER</a><a href="propagation.html">SOLAR</a><a href="netfinder.html">NETS</a><a href="adsb.html">ADS-B</a><a href="sports.html">SPORTS</a><a href="media.html" class="active" aria-current="page">MEDIA</a><a href="contact.html">CONTACT</a></nav>
+</header>
+<main class="wrap" id="main-content">
+  <section class="page-title"><p class="eyebrow">MEDIA · PHOTO COLLECTION</p><h2>KC8GW Photo Gallery</h2><p class="page-intro">Station, aircraft, and aviation photos. Select a photo to open the viewer.</p></section><section class="toolbar">
+    <div id="status" class="status">Loading photo collection…</div>
+    <a class="btn" href="media.html">Back to Media</a>
   </section>
 
   <section id="gallery" class="gallery" aria-label="KC8GW station photographs">
     <div class="empty">Loading gallery…</div>
   </section>
 
-  <footer class="footer">73 de KC8GW • Cleveland, Ohio</footer>
+  <footer class="gallery-note">73 de KC8GW • Cleveland, Ohio</footer>
 </main>
 
 <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
@@ -208,12 +37,7 @@ h1{
   </div>
 </div>
 
-<script>
-const OWNER = "GDub2152";
-const REPO = "KC8GW";
-const BRANCH = "main";
-const FOLDER = "images/qrz";
-const API = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FOLDER}?ref=${BRANCH}`;
+<footer class="footer site-footer"><div><img src="assets/images/kc8gw-patch.png" alt=""><span><b>KC8GW</b><br>Amateur Extra · WSGZ373</span></div><p>Northeast Ohio · Radio · Aviation</p><p>© <span id="copyrightYear"></span> KC8GW · <b>73!</b></p></footer><script>const API = "assets/data/gallery.json";
 
 const gallery = document.getElementById("gallery");
 const statusText = document.getElementById("status");
@@ -234,7 +58,7 @@ function prettyName(name){
 function render(){
   gallery.innerHTML = "";
   if(!photos.length){
-    gallery.innerHTML = '<div class="empty">No gallery images were found in <strong>images/qrz</strong>.</div>';
+    gallery.innerHTML = '<div class="empty">No photos are available yet.</div>';
     statusText.textContent = "No photos found.";
     return;
   }
@@ -292,7 +116,7 @@ document.addEventListener("keydown",(e)=>{
 
 fetch(API,{headers:{"Accept":"application/vnd.github+json"}})
   .then(r=>{
-    if(!r.ok) throw new Error(`GitHub API returned ${r.status}`);
+    if(!r.ok) throw new Error(`Gallery request returned ${r.status}`);
     return r.json();
   })
   .then(items=>{
@@ -305,11 +129,11 @@ fetch(API,{headers:{"Accept":"application/vnd.github+json"}})
     console.error(err);
     gallery.innerHTML = `
       <div class="empty">
-        The automatic gallery could not load right now.<br>
-        Photos remain stored in <strong>images/qrz</strong>.
+        The photo collection could not load right now.<br>
+        Please reload the page or return to Media.
       </div>`;
     statusText.textContent = "Gallery temporarily unavailable.";
   });
 </script>
-</body>
+<script src="assets/js/app.js?v=20261006"></script></body>
 </html>

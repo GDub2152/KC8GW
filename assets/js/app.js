@@ -4,5 +4,5 @@
   clocks(); setInterval(clocks,1000);
   const year=q('#copyrightYear'); if(year) year.textContent=new Date().getFullYear();
   const btn=q('.menu-toggle'),nav=q('#site-nav');
-  if(btn&&nav){btn.addEventListener('click',()=>{const open=nav.classList.toggle('open');btn.setAttribute('aria-expanded',String(open));});nav.addEventListener('click',e=>{if(e.target.matches('a')){nav.classList.remove('open');btn.setAttribute('aria-expanded','false')}});}
+  if(btn&&nav){btn.addEventListener('click',()=>{const open=nav.classList.toggle('open');btn.setAttribute('aria-expanded',String(open));});nav.addEventListener('click',e=>{if(e.target.closest('a')){nav.classList.remove('open');btn.setAttribute('aria-expanded','false')}});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&nav.classList.contains('open')){nav.classList.remove('open');btn.setAttribute('aria-expanded','false');btn.focus();}});}
 })();
