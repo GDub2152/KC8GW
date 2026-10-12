@@ -1,6 +1,6 @@
 const STORAGE_KEY="tboparcSecretaryHelperV1";
 const $=id=>document.getElementById(id);
-const scalarIds=["totalPresent","meetingType","meetingDate","scheduledTime","location","callTime","calledBy","quorum","priorMinutesAction","priorMinutesMeeting","priorMotionBy","priorSecondBy","priorYes","priorNo","priorNotes","reportsMotionBy","reportsSecondBy","reportsYes","reportsNo","presentation","adjournTime","adjournMotionBy","adjournSecondBy","adjournYes","adjournNo","secretaryName","secretaryCallsign"];
+const scalarIds=["treasurerBalance","treasurerNotes","totalPresent","meetingType","meetingDate","scheduledTime","location","callTime","calledBy","quorum","priorMinutesAction","priorMinutesMeeting","priorMotionBy","priorSecondBy","priorYes","priorNo","priorNotes","reportsMotionBy","reportsSecondBy","reportsYes","reportsNo","presentation","adjournTime","adjournMotionBy","adjournSecondBy","adjournYes","adjournNo","secretaryName","secretaryCallsign"];
 let state={attendance:[],reports:[],oldBusiness:[],newBusiness:[],announcements:[],attachments:[]};
 let saveTimer;
 
@@ -173,7 +173,11 @@ function refreshPreview(){
     prior=`<p>${esc(val("priorMinutesAction")||"Previous meeting minutes were addressed")}${val("priorMinutesMeeting")?` for the ${esc(val("priorMinutesMeeting"))}`:""}. ${val("priorMotionBy")?`A motion was made by ${esc(val("priorMotionBy"))}`:""}${val("priorSecondBy")?` and seconded by ${esc(val("priorSecondBy"))}`:""}.${voteSentence(val("priorYes"),val("priorNo"))}</p>${val("priorNotes")?`<p>${esc(val("priorNotes"))}</p>`:""}`;
   } else prior="<p>No entry recorded.</p>";
 
+  const treasuryBalance=val("treasurerBalance");
+  const treasuryNotes=val("treasurerNotes");
+  const treasuryReport=(treasuryBalance!==""||treasuryNotes.trim())?`<p><strong>Treasurer's Report</strong><br>${treasuryBalance!==""?`Account balance: ${Number(treasuryBalance).toLocaleString("en-US",{style:"currency",currency:"USD"})}<br>`:""}${treasuryNotes.trim()?esc(treasuryNotes).replace(/\n/g,"<br>"):""}</p>`:"";
   let reports=state.reports.length?state.reports.map(r=>`<p><strong>${esc(r.title||"Report")}</strong><br>${esc(r.text||"")}</p>`).join(""):"<p>None recorded.</p>";
+  reports=treasuryReport+reports;
   if(val("reportsMotionBy")||val("reportsSecondBy")) reports+=`<p>A motion was made to accept the officer reports${val("reportsMotionBy")?` by ${esc(val("reportsMotionBy"))}`:""}${val("reportsSecondBy")?` and seconded by ${esc(val("reportsSecondBy"))}`:""}.${voteSentence(val("reportsYes"),val("reportsNo"))}</p>`;
 
   const adj=(val("adjournTime")||val("adjournMotionBy"))?`<p>A motion to adjourn the meeting was made${val("adjournTime")?` at ${esc(fmtTime(val("adjournTime")))}`:""}${val("adjournMotionBy")?` by ${esc(val("adjournMotionBy"))}`:""}${val("adjournSecondBy")?` and seconded by ${esc(val("adjournSecondBy"))}`:""}.${voteSentence(val("adjournYes"),val("adjournNo"))}</p>`:"<p>No adjournment entry recorded.</p>";
