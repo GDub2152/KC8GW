@@ -79,7 +79,7 @@
       <div><h2>Attachments</h2><p>Add the attendance list, agenda, reports, photos, PDFs, or other meeting files.</p></div>
       <label class="file-btn">+ Add Attachments<input type="file" id="attachmentInput" multiple></label>
     </div>
-    <div class="attachment-note">Attachments are stored locally on this device with the meeting. The generated minutes list the attachment names but do not embed the files themselves.</div>
+    <div class="attachment-note">Attachments are stored locally on this device with the meeting. Download the minutes and original files together using the ZIP button. Files remain on this device unless you save the ZIP elsewhere.</div>
     <div id="attachmentList" class="card-list"></div>
   </section>
 
@@ -190,6 +190,7 @@
     <div class="export-bar">
       <button id="printBtn">Print / Save PDF</button>
       <button id="wordBtn">Download Word</button>
+      <button id="downloadPackageBtn">Download Minutes + Attachments (ZIP)</button>
       <button class="secondary" id="exportJsonBtn">Backup Meeting</button>
       <label class="file-btn secondary">Restore Meeting<input type="file" id="importJsonInput" accept=".json,application/json"></label>
     </div>

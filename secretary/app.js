@@ -233,6 +233,58 @@ $("wordBtn").onclick=()=>{
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);
   a.download=`TBOPARC-Minutes-${val("meetingDate")||"meeting"}.doc`;a.click();URL.revokeObjectURL(a.href);
 };
+
+// Build a self-contained ZIP with the generated minutes and the original attachments.
+function zipArchive(entries){
+  const enc=new TextEncoder(), parts=[], central=[];
+  let offset=0;
+  const u16=n=>[n&255,(n>>>8)&255], u32=n=>[n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255];
+  const crcTable=Array.from({length:256},(_,i)=>{let c=i;for(let j=0;j<8;j++)c=c&1?0xedb88320^(c>>>1):c>>>1;return c>>>0});
+  const crc32=data=>{let c=0xffffffff;for(const b of data)c=crcTable[(c^b)&255]^(c>>>8);return (c^0xffffffff)>>>0};
+  for(const entry of entries){
+    const name=enc.encode(entry.name), data=entry.data, crc=crc32(data);
+    const local=new Uint8Array([...u32(0x04034b50),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0),...u32(crc),...u32(data.length),...u32(data.length),...u16(name.length),...u16(0),...name]);
+    parts.push(local,data);
+    central.push(new Uint8Array([...u32(0x02014b50),...u16(20),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0),...u32(crc),...u32(data.length),...u32(data.length),...u16(name.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(offset),...name]));
+    offset+=local.length+data.length;
+  }
+  const centralSize=central.reduce((n,p)=>n+p.length,0);
+  const end=new Uint8Array([...u32(0x06054b50),...u16(0),...u16(0),...u16(entries.length),...u16(entries.length),...u32(centralSize),...u32(offset),...u16(0)]);
+  return new Blob([...parts,...central,end],{type:"application/zip"});
+}
+function safeFileName(name){
+  return String(name||"attachment").replace(/[\\/:*?"<>|\x00-\x1f]/g,"_").replace(/^\.+/,"_").slice(0,160)||"attachment";
+}
+$("downloadPackageBtn").onclick=async()=>{
+  const button=$("downloadPackageBtn");button.disabled=true;button.textContent="Preparing ZIP…";
+  try{
+    refreshPreview();save();
+    const enc=new TextEncoder();
+    const date=val("meetingDate")||"meeting";
+    const body=$("minutesPreview").innerHTML;
+    const doc=`<!doctype html><html><head><meta charset="utf-8"><title>W8DRZ Meeting Minutes</title></head><body>${body}</body></html>`;
+    const entries=[
+      {name:"W8DRZ-Minutes-"+date+".doc",data:enc.encode(doc)},
+      {name:"W8DRZ-Minutes-"+date+".html",data:enc.encode(doc)},
+      {name:"meeting-backup.json",data:enc.encode(localStorage.getItem(STORAGE_KEY)||"{}")}
+    ];
+    const missing=[],used=new Set();
+    for(const a of state.attachments){
+      const blob=await getAttachment(a.id);
+      if(!blob){missing.push(a.name);continue}
+      let name=safeFileName(a.name),count=2;
+      while(used.has(name.toLowerCase())){const dot=name.lastIndexOf(".");const base=dot>0?name.slice(0,dot):name,ext=dot>0?name.slice(dot):"";name=`${base}-${count++}${ext}`}
+      used.add(name.toLowerCase());
+      entries.push({name:"Attachments/"+name,data:new Uint8Array(await blob.arrayBuffer())});
+    }
+    if(missing.length&&!confirm("These attachment files are no longer available on this device:\n"+missing.join("\n")+"\n\nDownload the package without them?"))return;
+    const zip=zipArchive(entries),url=URL.createObjectURL(zip),link=document.createElement("a");
+    link.href=url;link.download="W8DRZ-Meeting-"+date+"-Complete.zip";document.body.appendChild(link);link.click();link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),30000);
+  }catch(err){alert("Could not prepare the meeting package: "+err.message)}
+  finally{button.disabled=false;button.textContent="Download Minutes + Attachments (ZIP)"}
+};
+
 $("exportJsonBtn").onclick=()=>{
   save();const blob=new Blob([localStorage.getItem(STORAGE_KEY)],{type:"application/json"});
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`TBOPARC-Meeting-${val("meetingDate")||"backup"}.json`;a.click();URL.revokeObjectURL(a.href);
