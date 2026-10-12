@@ -255,34 +255,98 @@ function zipArchive(entries){
 function safeFileName(name){
   return String(name||"attachment").replace(/[\\/:*?"<>|\x00-\x1f]/g,"_").replace(/^\.+/,"_").slice(0,160)||"attachment";
 }
+
+// Offline PDF creation for text and images; preserves PDFs without alteration.
+function pdfBytes(pages){
+  const enc=new TextEncoder(),objects=[null],add=v=>(objects.push(v),objects.length-1);
+  const font=add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+  const pageRefs=[], pageTree=add('');
+  for(const pg of pages){
+    let stream,resources=`<< /Font << /F1 ${font} 0 R >> >>`;
+    if(pg.jpeg){
+      const img=add({head:`<< /Type /XObject /Subtype /Image /Width ${pg.w} /Height ${pg.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${pg.jpeg.length} >>`,bytes:pg.jpeg});
+      resources=`<< /XObject << /Im1 ${img} 0 R >> >>`;
+      const scale=Math.min(555/pg.w,735/pg.h),w=pg.w*scale,h=pg.h*scale;
+      stream=`q ${w.toFixed(2)} 0 0 ${h.toFixed(2)} ${(612-w)/2} ${(792-h)/2} cm /Im1 Do Q`;
+    }else{
+      stream=pg.lines.map((line,i)=>`BT /F1 10 Tf 44 ${748-i*14} Td (${String(line).replace(/[^\x20-\x7e]/g,'?').replace(/[\\()]/g,'\\$&')}) Tj ET`).join('\n');
+    }
+    const streamData=enc.encode(stream),content=add({head:`<< /Length ${streamData.length} >>`,bytes:streamData});
+    pageRefs.push(add(`<< /Type /Page /Parent ${pageTree} 0 R /MediaBox [0 0 612 792] /Resources ${resources} /Contents ${content} 0 R >>`));
+  }
+  objects[pageTree]=`<< /Type /Pages /Kids [${pageRefs.map(x=>x+' 0 R').join(' ')}] /Count ${pageRefs.length} >>`;
+  const catalog=add(`<< /Type /Catalog /Pages ${pageTree} 0 R >>`);
+  const parts=[enc.encode('%PDF-1.4\n')], offsets=[0];let length=parts[0].length;
+  const push=b=>{parts.push(b);length+=b.length};
+  for(let i=1;i<objects.length;i++){
+    offsets[i]=length;push(enc.encode(`${i} 0 obj\n`));const obj=objects[i];
+    if(typeof obj==='string')push(enc.encode(obj+'\n'));
+    else{push(enc.encode(obj.head+'\nstream\n'));push(obj.bytes);push(enc.encode('\nendstream\n'))}
+    push(enc.encode('endobj\n'));
+  }
+  const xref=length;push(enc.encode(`xref\n0 ${objects.length}\n0000000000 65535 f \n`));
+  for(let i=1;i<objects.length;i++)push(enc.encode(String(offsets[i]).padStart(10,'0')+' 00000 n \n'));
+  push(enc.encode(`trailer\n<< /Size ${objects.length} /Root ${catalog} 0 R >>\nstartxref\n${xref}\n%%EOF`));
+  const output=new Uint8Array(length);let at=0;for(const b of parts){output.set(b,at);at+=b.length}return output;
+}
+function minutesPdf(){
+  const text=$('minutesPreview').innerText.replace(/\r/g,'');const lines=[];
+  for(const raw of text.split('\n')){
+    if(!raw.trim()){lines.push('');continue}
+    let line='';for(const word of raw.trim().split(/\s+/)){
+      if((line+' '+word).length>92){lines.push(line);line=word}else line+=(line?' ':'')+word;
+    }if(line)lines.push(line);
+  }
+  const pages=[];for(let i=0;i<lines.length;i+=49)pages.push({lines:lines.slice(i,i+49)});
+  return pdfBytes(pages.length?pages:[{lines:['W8DRZ Meeting Minutes']}]);
+}
+async function imagePdf(blob){
+  const url=URL.createObjectURL(blob);
+  try{
+    const img=new Image();img.src=url;await img.decode();
+    const canvas=document.createElement('canvas');const scale=Math.min(1,2400/Math.max(img.naturalWidth,img.naturalHeight));
+    canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));
+    const ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);
+    const jpeg=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',0.88));
+    if(!jpeg)throw new Error('Image conversion failed');
+    return pdfBytes([{jpeg:new Uint8Array(await jpeg.arrayBuffer()),w:canvas.width,h:canvas.height}]);
+  }finally{URL.revokeObjectURL(url)}
+}
 $("downloadPackageBtn").onclick=async()=>{
   const button=$("downloadPackageBtn");button.disabled=true;button.textContent="Preparing ZIP…";
   try{
     refreshPreview();save();
     const enc=new TextEncoder();
     const date=val("meetingDate")||"meeting";
-    const body=$("minutesPreview").innerHTML;
-    const doc=`<!doctype html><html><head><meta charset="utf-8"><title>W8DRZ Meeting Minutes</title></head><body>${body}</body></html>`;
-    const entries=[
-      {name:"W8DRZ-Minutes-"+date+".doc",data:enc.encode(doc)},
-      {name:"W8DRZ-Minutes-"+date+".html",data:enc.encode(doc)},
-      {name:"meeting-backup.json",data:enc.encode(localStorage.getItem(STORAGE_KEY)||"{}")}
-    ];
-    const missing=[],used=new Set();
+    const entries=[{name:"W8DRZ-Minutes-"+date+".pdf",data:minutesPdf()}];
+    const missing=[],unsupported=[],used=new Set();
     for(const a of state.attachments){
       const blob=await getAttachment(a.id);
       if(!blob){missing.push(a.name);continue}
       let name=safeFileName(a.name),count=2;
       while(used.has(name.toLowerCase())){const dot=name.lastIndexOf(".");const base=dot>0?name.slice(0,dot):name,ext=dot>0?name.slice(dot):"";name=`${base}-${count++}${ext}`}
       used.add(name.toLowerCase());
-      entries.push({name:"Attachments/"+name,data:new Uint8Array(await blob.arrayBuffer())});
+      const ext=name.split('.').pop().toLowerCase();
+      if(ext==='pdf'||blob.type==='application/pdf'){
+        entries.push({name:"Attachments/"+name.replace(/\.[^.]+$/,'.pdf'),data:new Uint8Array(await blob.arrayBuffer())});
+      }else if(blob.type.startsWith('image/')||['jpg','jpeg','png','webp','gif','bmp'].includes(ext)){
+        try{entries.push({name:"Attachments/"+name.replace(/\.[^.]+$/, '')+'.pdf',data:await imagePdf(blob)})}
+        catch(e){unsupported.push(name);entries.push({name:"Originals-needing-conversion/"+name,data:new Uint8Array(await blob.arrayBuffer())})}
+      }else{
+        unsupported.push(name);
+        entries.push({name:"Originals-needing-conversion/"+name,data:new Uint8Array(await blob.arrayBuffer())});
+      }
     }
-    if(missing.length&&!confirm("These attachment files are no longer available on this device:\n"+missing.join("\n")+"\n\nDownload the package without them?"))return;
+    if(missing.length&&!confirm("These attachment files are unavailable on this device:\n"+missing.join("\n")+"\n\nDownload the remaining files?"))return;
+    if(unsupported.length){
+      const notice="The following files cannot be accurately converted to PDF in this offline browser tool. They will be preserved as originals in a separate folder:\n"+unsupported.join("\n")+"\n\nContinue?";
+      if(!confirm(notice))return;
+    }
     const zip=zipArchive(entries),url=URL.createObjectURL(zip),link=document.createElement("a");
     link.href=url;link.download="W8DRZ-Meeting-"+date+"-Complete.zip";document.body.appendChild(link);link.click();link.remove();
     setTimeout(()=>URL.revokeObjectURL(url),30000);
   }catch(err){alert("Could not prepare the meeting package: "+err.message)}
-  finally{button.disabled=false;button.textContent="Download Minutes + Attachments (ZIP)"}
+  finally{button.disabled=false;button.textContent="Download Minutes + Attachments (PDF ZIP)"}
 };
 
 $("exportJsonBtn").onclick=()=>{
