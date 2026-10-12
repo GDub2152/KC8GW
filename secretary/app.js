@@ -34,7 +34,7 @@ function renderAttendance(){
       <label>Name<input data-att="${p.id}" data-field="name" value="${esc(p.name)}" placeholder="Name"></label>
       <label>Callsign<input data-att="${p.id}" data-field="callsign" value="${esc(p.callsign)}" placeholder="Optional"></label>
       <label>Role<select data-att="${p.id}" data-field="role">
-        ${["Member","President","Vice President","Secretary","Treasurer","Trustee1","Trustee2","Repeater/License Trustee","Director-at-Large","Guest","Other"].map(x=>`<option ${p.role===x?"selected":""}>${x}</option>`).join("")}
+        ${["President","Vice President","Secretary","Treasurer","Sergeant at Arms","Trustee1","Trustee2","Repeater/License Trustee","Director-at-Large","Other Officer"].map(x=>`<option ${p.role===x?"selected":""}>${x}</option>`).join("")}
       </select></label>
       <button class="danger small" data-remove-att="${p.id}">Remove</button>
     </div>`;
@@ -121,7 +121,7 @@ $("attachmentInput").onchange=async e=>{
   e.target.value="";renderAttachments();scheduleSave();refreshPreview();
 };
 
-$("addPersonBtn").onclick=()=>{state.attendance.push({id:uid(),name:"",callsign:"",role:"Member"});renderAttendance();scheduleSave()};
+$("addPersonBtn").onclick=()=>{state.attendance.push({id:uid(),name:"",callsign:"",role:"President"});renderAttendance();scheduleSave()};
 $("addReportBtn").onclick=()=>{state.reports.push({id:uid(),title:"",text:""});renderReports();scheduleSave()};
 document.querySelectorAll("[data-add-item]").forEach(b=>b.onclick=()=>{const k=b.dataset.addItem;state[k].push({id:uid(),text:""});renderItems(k);scheduleSave()});
 document.addEventListener("click",async e=>{
@@ -166,7 +166,7 @@ function voteSentence(yes,no){
 function textOrNone(arr){return arr.length?`<ol>${arr.map(x=>`<li>${esc(x.text||"")}</li>`).join("")}</ol>`:"<p>None.</p>"}
 
 function refreshPreview(){
-  const officers=state.attendance.filter(p=>p.role!=="Member"&&p.role!=="Guest"&&p.role!=="Other");
+  const officers=state.attendance.filter(p=>true);
   const generalCount=String(val("totalPresent")||"0").trim();
   let prior="";
   if(val("priorMinutesAction")||val("priorMotionBy")){
